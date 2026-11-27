@@ -158,8 +158,11 @@ static void print_bar(uint8_t sim)
 static void start_learning(int full)
 {
     if (full) {
-        if (sent_ai_init()) {
-            fatal("init NanoEdge", -1);
+        int rc = sent_ai_init();
+        if (rc) {
+            /* -2 : librairie de classification sans classe "normal" */
+            fatal((rc == -2) ? "init NanoEdge (pas de classe \"normal\" dans la librairie)"
+                             : "init NanoEdge", rc);
         }
         scene_ref_reset(&ref);
         total_learned = 0;

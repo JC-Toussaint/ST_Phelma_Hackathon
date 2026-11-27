@@ -1,5 +1,10 @@
 /**
- * sentinel_ai.c - Adaptateur NanoEdge AI "Anomaly detection" (voir sentinel_ai.h)
+ * sentinel_ai.c - Adaptateur NanoEdge AI (voir sentinel_ai.h)
+ *
+ * Deux types de librairie acceptés :
+ *  - "Anomaly detection" (conseillé) : apprentissage sur la carte ;
+ *  - "N-Class classification" avec les classes normal et anomalie : modèle appris
+ *    dans le Studio, similarité = probabilité de "normal".
  *
  * Seul NEAI_OK est utilisé parmi les codes de retour : les autres valeurs de
  * l'énumération neai_state varient selon les versions du Studio.
@@ -14,13 +19,6 @@
 #include <string.h>
 #include "NanoEdgeAI.h"   /* généré par NanoEdge AI Studio (projet Anomaly detection) */
 
-/* Une librairie de détection d'anomalie n'a pas de classes : NEAI_NUMBER_OF_CLASSES
- * signale une librairie de classification (par exemple la librairie modèle de ST
- * fournie dans le dépôt), qui n'a pas les fonctions neai_anomalydetection_*. */
-#if defined(NEAI_NUMBER_OF_CLASSES)
-#error "NanoEdgeAI.h vient d'une librairie de CLASSIFICATION (librairie modele de ST ?) : generer dans NanoEdge AI Studio un projet 'Anomaly detection', puis remplacer Inc/NanoEdgeAI.h et Src/libneai.a (voir sentinelle/README.md)"
-#endif
-
 #if defined(NEAI_INPUT_SIGNAL_LENGTH)
 #define SENT_NEAI_LEN  (NEAI_INPUT_SIGNAL_LENGTH * NEAI_INPUT_AXIS_NUMBER)
 #else
@@ -33,6 +31,63 @@
 
 static float input[SENT_SIGNAL_LEN];
 
+#if defined(NEAI_NUMBER_OF_CLASSES)
+/* ------------------------------------------------------------------------
+ * Librairie de CLASSIFICATION (projet Studio "N-Class classification" avec les
+ * classes normal et anomalie) : le modèle est appris dans le Studio, pas sur la
+ * carte. La similarité est la probabilité de la classe "normal", en %.
+ * L'apprentissage sur la carte ne sert alors qu'à la carte des changements.
+ * ------------------------------------------------------------------------ */
+#include <ctype.h>
+
+static float probs[NEAI_NUMBER_OF_CLASSES];
+static int   normal_id = 0;
+
+static int is_normal_name(const char *n)
+{
+    static const char ref[] = "normal";
+    if (n == NULL) return 0;
+    for (int i = 0; ref[i]; i++) {
+        if (tolower((unsigned char)n[i]) != ref[i]) return 0;
+    }
+    return n[6] == '\0';
+}
+
+int sent_ai_init(void)
+{
+    if (neai_classification_init() != NEAI_OK) return -1;
+    normal_id = -1;
+    for (int k = 0; k < NEAI_NUMBER_OF_CLASSES; k++) {
+        if (is_normal_name(neai_get_class_name(k))) normal_id = k;
+    }
+    return (normal_id < 0) ? -2 : 0;    /* -2 : pas de classe "normal" dans la librairie */
+}
+
+void sent_ai_learn(const float *signal)
+{
+    (void)signal;                        /* modèle figé : rien à apprendre */
+}
+
+int sent_ai_detect(const float *signal, uint8_t *similarity)
+{
+    int id = 0;
+    memcpy(input, signal, sizeof(input));
+    if (neai_classification(input, probs, &id) != NEAI_OK) return -1;
+    float p = probs[normal_id] * 100.0f + 0.5f;
+    *similarity = (uint8_t)((p > 100.0f) ? 100.0f : (p < 0.0f ? 0.0f : p));
+    return 0;
+}
+
+uint32_t sent_ai_min_learn(void)
+{
+    return 0;
+}
+
+#else
+/* ------------------------------------------------------------------------
+ * Librairie de DÉTECTION D'ANOMALIE (projet Studio "Anomaly detection") :
+ * apprentissage sur la carte.
+ * ------------------------------------------------------------------------ */
 int sent_ai_init(void)
 {
     return (neai_anomalydetection_init() == NEAI_OK) ? 0 : -1;
@@ -59,5 +114,6 @@ uint32_t sent_ai_min_learn(void)
     return 0;   /* sinon : reporter dans SENT_LEARN_SIGNALS la valeur conseillée par le Studio */
 #endif
 }
+#endif /* NEAI_NUMBER_OF_CLASSES */
 
 #endif /* APP_MODE == APP_MODE_SENTINEL */

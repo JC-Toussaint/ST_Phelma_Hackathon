@@ -63,8 +63,8 @@ l'application a été ajoutée (voir `DIFFERENCES_ST.md`). Le brochage, l'I2C, l
    ou directement dans `Inc/app_config.h`.
 3. Compiler, puis flasher via le ST-LINK.
 
-⚠️ Le mode `1` ne compile qu'avec une librairie NanoEdge **Anomaly detection** (étape 4). La librairie
-fournie par ST est une librairie de classification.
+⚠️ Le mode `1` demande votre librairie NanoEdge (étape 4) : la librairie modèle fournie par ST, de
+classification sans classe `normal`, s'arrête sur « init NanoEdge ».
 ⚠️ Ne pas régénérer le code depuis le `.ioc` sans précaution (voir `DIFFERENCES_ST.md`, section 5).
 
 ## 2. Pourquoi collecter des données si l'apprentissage est embarqué ?
@@ -156,12 +156,19 @@ version du Studio.
 2. Mettre `APP_MODE` à `1` dans `Inc/app_config.h`, ou définir le symbole dans les propriétés du projet.
 3. Recompiler, flasher, installer la carte face à la scène, puis la mettre sous tension (section 5).
 
+### Variante : librairie de classification
+
+Une librairie **N-Class classification** générée avec les deux classes `normal` et `anomalie` est aussi
+acceptée. Le modèle est alors **figé** : il a été appris dans le Studio. La similarité affichée est la
+probabilité de la classe `normal`, en %, et l'apprentissage sur la carte (B1, `l`, `a`) ne sert plus qu'à la
+carte des changements. Pour que la carte apprenne seule votre scène, préférez **Anomaly detection**.
+
 ### Messages d'erreur possibles
 
 | Message | Cause et solution |
 |---|---|
 | `#error La librairie NanoEdge n'attend pas SENT_SIGNAL_LEN valeurs` | La taille du signal déclarée dans le Studio n'est pas 512. Refaire le projet Studio avec 1 axe (ou 64 axes) |
-| `neai_anomalydetection_init` / `_learn` / `_detect` introuvable | La librairie copiée est une librairie de **classification** (par exemple la librairie modèle de ST), et non de détection d'anomalie |
+| `ERREUR : init NanoEdge (pas de classe "normal" dans la librairie) (code -2)` | La librairie est une librairie de **classification** sans classe `normal` (par exemple la librairie modèle de ST). Refaire le projet Studio avec les fichiers `normal.csv` et `anomalie.csv` |
 | Erreur d'édition de liens « uses VFP register arguments » / float-abi | Recompiler la librairie dans le Studio avec Float ABI **hard** et FPU **fpv4-sp-d16** |
 | Fausses alarmes fréquentes sur la carte | Apprentissage trop court ou scène qui varie (lumière) : appui court sur B1 dans ces conditions, augmenter `SENT_LEARN_SIGNALS`, ou baisser le seuil avec `-` |
 
