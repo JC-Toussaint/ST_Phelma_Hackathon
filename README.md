@@ -124,8 +124,10 @@ cd <projet>/tests && make test
 ```
 
 > Les firmwares ont été compilés sur PC avec les en-têtes réels du projet ST, et les outils PC ont été
-> testés en mode démo. Pierre-Feuille-Ciseaux a été essayé sur la carte (collecte, jeu, probabilités en
-> direct) ; la Sentinelle reste à valider sur la carte.
+> testés en mode démo. Les deux projets ont été essayés sur la carte : Pierre-Feuille-Ciseaux (collecte,
+> jeu, probabilités en direct) et la Sentinelle (collecte, surveillance avec une librairie de classification
+> `normal` / `anomalie`). Le mode Anomaly detection de la Sentinelle (apprentissage embarqué) reste à
+> valider sur la carte.
 
 ## À savoir
 
