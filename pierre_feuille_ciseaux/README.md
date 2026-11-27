@@ -13,7 +13,9 @@ Pour l'originalité, il propose aussi :
 - **Une preuve qu'il ne triche pas** : avant le compte à rebours, le STM32 publie l'empreinte (FNV-1a) de son
   coup et d'un secret, puis révèle le secret après la manche. Comme il ne peut pas changer de coup après avoir
   vu le tien, l'empreinte permet de le vérifier.
-- **De l'aléa tiré du bruit de mesure** du capteur ToF.
+- **Un vrai hasard** : pour ses coups au hasard et pour le secret de l'empreinte, le STM32 se sert des
+  petites variations des distances mesurées par le capteur, qui changent à chaque mesure. Sans cela, ses
+  tirages seraient les mêmes à chaque démarrage.
 
 ```
 pierre_feuille_ciseaux/
