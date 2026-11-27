@@ -30,7 +30,8 @@ Le capteur, posé à plat, regarde la main. Le STM32 reconnaît le geste et joue
 Posée face à un bureau, une étagère ou une porte, la carte **apprend seule** à quoi ressemble la scène
 normale, puis surveille :
 - l'**alarme est expliquée** par une carte 8×8 qui montre ce qui est apparu ou a disparu ;
-- un appui sur B1 ajoute la situation actuelle à la normale (**apprentissage incrémental**).
+- un appui sur B1 ajoute la situation actuelle à la normale (**apprentissage incrémental**) ;
+- **pas à pas** pour une première fois : [`sentinelle/DEMARRAGE.md`](sentinelle/DEMARRAGE.md).
 
 ---
 

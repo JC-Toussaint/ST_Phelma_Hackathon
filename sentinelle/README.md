@@ -22,6 +22,9 @@ changement :
 [3:51] Retour a la normale apres 9 s (similarite mini 38%)
 ```
 
+> 🚀 **Première fois ?** Suivre [`DEMARRAGE.md`](DEMARRAGE.md) : toutes les opérations dans l'ordre, de
+> l'installation des logiciels à la surveillance.
+
 Ce qui la rend originale :
 
 - **Apprentissage embarqué** (ce que NanoEdge a d'unique) : le modèle n'est pas entraîné sur PC. La carte
@@ -41,21 +44,31 @@ sentinelle/
 │   ├── Inc/, Src/                  + app, tof_sensor, scene_preproc, sentinel_ai, uart_io
 │   └── X-CUBE-TOF1/App/app_x-cube-tof1.c   modifié : appelle app_init() / app_loop() ; garde les
 │                                           réglages du capteur de l'exemple ST (et leurs commentaires)
+├── DEMARRAGE.md                    les opérations dans l'ordre, pour une première fois
 ├── DIFFERENCES_ST.md               liste détaillée des différences avec le projet ST
 ├── tools/sentinel_logger_gui.py    collecte en interface graphique (outil commun outils/, tkinter)
 ├── tools/sentinel_logger.py        la même chose en ligne de commande
 ├── tools/profil_collecte.json      profil de collecte : classes, format du signal, affichage
+├── img/collecte_gui.png            capture de l'interface de collecte
+├── sentinelle.pptx                 présentation du projet (diapositives tirées de ce README)
 └── tests/                          tests PC (make test) + CSV synthétiques (make synth)
 ```
 
 ---
 
-## 1. Projet STM32CubeIDE
+## 1. Montage et installation
 
-**Montage** : enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG (connecteurs Arduino), puis brancher le câble
-USB (ST-LINK).
-⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
-sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
+- ⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
+  sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
+- Enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG (connecteurs Arduino), puis brancher le câble USB
+  (ST-LINK). Il alimente la carte ; le terminal série reste facultatif en surveillance.
+- **Poser la carte face à la scène** à surveiller (bureau, étagère, porte), capteur tourné vers elle, à
+  **0,5–3 m**. Au-delà de 3 m (`SENT_MAX_MM`), tout est compté comme « loin ».
+- **Fixer la carte** (adhésif, support, pile de livres) : le moindre déplacement du capteur change toute la
+  scène et déclenche une alarme, ou fausse une collecte.
+- Éviter le **soleil direct** sur la scène ou sur le capteur : il dégrade les mesures.
+
+## 2. Projet STM32CubeIDE
 
 Le dossier `NUCLEO_L476RG_TOF_SENTINELLE/` est le projet ST `NUCLEO_L476RG_TOF_VL53L5A1`, auquel
 l'application a été ajoutée (voir `DIFFERENCES_ST.md`). Le brochage, l'I2C, le BSP X-CUBE-TOF1 et l'UART à
@@ -67,17 +80,17 @@ l'application a été ajoutée (voir `DIFFERENCES_ST.md`). Le brochage, l'I2C, l
    dans `Inc/app_config.h`.
 3. Compiler, puis flasher via le ST-LINK.
 
-⚠️ Le mode `1` demande votre librairie NanoEdge (étape 4) : la librairie modèle fournie par ST, de
+⚠️ Le mode `1` demande votre librairie NanoEdge (section 5) : la librairie modèle fournie par ST, de
 classification sans classe `normal`, s'arrête sur « init NanoEdge ».
 ⚠️ Ne pas régénérer le code depuis le `.ioc` sans précaution (voir `DIFFERENCES_ST.md`, section 5).
 
-> **Deux types de librairie NanoEdge sont acceptés** (détail à la fin de la section 4) :
+> **Deux types de librairie NanoEdge sont acceptés** (détail à la fin de la section 5) :
 > - **Anomaly detection** (le projet est conçu pour elle) : la carte **apprend sur place** sa scène normale ;
 >   les CSV ne servent qu'à choisir l'algorithme.
 > - **N-Class classification** avec les classes `normal` et `anomalie` : le modèle est **appris dans le
 >   Studio** avec vos CSV et figé ; la carte surveille dès le démarrage, sans phase d'apprentissage.
 
-## 2. Pourquoi collecter des données si l'apprentissage est embarqué ?
+## 3. Pourquoi collecter des données si l'apprentissage est embarqué ?
 
 Le Studio a besoin d'exemples pour **choisir l'algorithme** (prétraitement et modèle) le mieux adapté à ce
 type de signal. La librairie générée ne contient **aucune connaissance**, juste l'algorithme vierge. La
@@ -86,33 +99,79 @@ connaissance est apprise ensuite sur la carte, à son emplacement final.
 Le benchmark peut donc se faire **sur une scène différente** de celle qui sera surveillée, tant qu'elle est
 du même genre (bureau, pièce, porte…).
 
-## 3. Collecte (APP_MODE = 0)
+## 4. Collecte (APP_MODE = 0)
 
-1. Compiler avec `APP_MODE=0` (valeur par défaut), flasher, puis installer la carte face à la scène.
-2. Lancer :
+1. Compiler avec `APP_MODE=0` (valeur par défaut), flasher, puis installer la carte face à la scène
+   (section 1).
+2. Sur le PC : `pip install pyserial`, puis :
    ```bash
-   pip install pyserial
    python tools/sentinel_logger_gui.py                  # interface graphique (recommandé)
    python tools/sentinel_logger_gui.py --demo           # pour la découvrir sans carte (données simulées)
    python tools/sentinel_logger.py --port COM5 --view   # ou en ligne de commande
    python tools/sentinel_logger.py --port COM5          # normal.csv puis anomalie.csv
    ```
    Ces deux scripts lancent l'outil de collecte commun du dépôt ([outils/](../outils/README.md)) avec le
-   profil `tools/profil_collecte.json`. L'interface graphique (tkinter, 115200 bauds) affiche la scène 8×8
-   en direct : proche = clair, loin = sombre, case vide = pas de cible ; la case **Distances** (D) écrit les
-   distances en cm. Le bouton **Mémoriser la référence** (touche R) puis la vue **Écarts** (E) montrent ce
-   qui change par rapport à la scène normale : `+` en rouge pour ce qui est apparu, `−` en bleu pour ce qui a
-   disparu, comme la carte des changements du firmware. On vérifie ainsi que les anomalies jouées sont bien
-   vues par le capteur. Enregistrement : classe 1/2, Espace, progression avec durée restante, et annulation
-   de la dernière passe. La démo (`--demo`) simule une scène et un objet qui bouge devant ; ses fichiers
-   vont dans `tools/demo/`, jamais avec les vraies données.
-   Les fichiers `normal.csv` et `anomalie.csv` sont enregistrés **dans le dossier `tools/`, à côté des
+   profil `tools/profil_collecte.json`. Le mode d'emploi de l'interface est juste après, dans « Utiliser
+   l'interface de collecte ».
+3. La carte envoie un signal **en continu**, même quand rien ne bouge : **~2 signaux/s** (un toutes les
+   8 trames), à 115200 bauds. Une passe de 300 signaux dure donc **~2 min 30**.
+4. Les fichiers `normal.csv` et `anomalie.csv` sont enregistrés **dans le dossier `tools/`, à côté des
    scripts**. `--out` ou le champ « Dossier » de l'interface permettent d'en choisir un autre.
-   - **normal** : scène immobile, avec plusieurs passes (lumière allumée ou éteinte, heures différentes).
+   - **normal** : scène immobile, **personne dans le champ** (lancer la passe, puis sortir du champ
+     pendant le compte à rebours). Plusieurs passes : lumière allumée ou éteinte, heures différentes,
+     petites variations acceptables (chaise un peu déplacée…).
    - **anomalie** : passer devant, retirer, ajouter ou déplacer des objets, ouvrir un tiroir… le plus varié
      possible.
 
-## 4. Générer la librairie NanoEdge AI
+**Format d'un signal** : 8 trames × 64 zones = 512 entiers, la même taille que la librairie modèle du projet
+ST. Chaque zone vaut `100 × distance / 3000 mm` (1 unité = 30 mm) ; **100** = 3 m ou plus, ou pas de cible.
+Contrairement à Pierre-Feuille-Ciseaux, rien n'est recentré : on garde les **distances absolues de toute la
+scène**, puisque c'est elle qu'on apprend.
+
+### Utiliser l'interface de collecte (`sentinel_logger_gui.py`)
+
+![Interface de collecte en mode --demo : vue Écarts pendant une passe « anomalie »](img/collecte_gui.png)
+
+*Capture en mode `--demo` : la référence a été mémorisée (R), la vue Écarts montre l'objet simulé qui est
+apparu (+ rouge) ou a quitté une zone (− bleu), pendant une passe « anomalie ».*
+
+L'interface est la même que pour Pierre-Feuille-Ciseaux (voir son
+[README](../pierre_feuille_ciseaux/README.md#utiliser-linterface-de-collecte-rps_logger_guipy)), avec des
+outils en plus pour une scène :
+
+| Zone | Contenu |
+|---|---|
+| **Grille 8×8** | La dernière trame : **proche = clair, loin = sombre**, case vide = pas de cible. Toute la scène est visible, pas seulement un objet |
+| **Distances (D)** | Écrit dans chaque case la distance en cm ; sous la grille, la distance de l'objet le plus proche |
+| **Mémoriser la référence (R)** | Enregistre la scène actuelle (trame moyenne du dernier signal) comme référence et active la vue Écarts |
+| **Écarts (E)** | Zones qui ont changé de plus de 120 mm par rapport à la référence : `+` rouge = apparu ou rapproché, `−` bleu = disparu ou éloigné, comme la carte des changements du firmware |
+| **Enregistrement** | Touche `1` normal, `2` anomalie ; l'astuce sous la barre change avec la classe |
+| **Messages de la carte** | « Sentinelle : mode COLLECTE », puis rien d'autre : la carte n'envoie que des signaux |
+
+**Déroulement d'une collecte**
+
+1. Flasher en `APP_MODE 0`, **fermer Tera Term**, lancer `python tools/sentinel_logger_gui.py`, choisir le
+   port, puis *Connecter* : la grille s'anime aussitôt (~2 signaux/s).
+2. Scène normale, personne devant : appuyer sur **R** pour mémoriser la référence. La vue Écarts doit
+   montrer très peu de zones changées.
+3. **Vérifier que les anomalies sont vues** : passer devant, déplacer un objet. Les `+` / `−` doivent
+   apparaître au bon endroit ; un objet trop petit ou trop loin ne sera pas vu non plus par la carte.
+4. Choisir `1` (normal), appuyer sur **Espace** et **sortir du champ** pendant le compte à rebours. Ne
+   rien toucher pendant ~2 min 30.
+5. Choisir `2` (anomalie), **Espace**, puis provoquer des changements variés pendant toute la passe.
+6. Recommencer : **2 ou 3 passes par classe**, dans des conditions différentes. Une passe ratée (quelqu'un
+   est passé pendant « normal ») se retire avec **Annuler la dernière passe**.
+
+**Problèmes fréquents** : ceux de Pierre-Feuille-Ciseaux (port occupé, liste des ports vide, touches sans
+effet quand le curseur est dans un champ), plus :
+
+| Symptôme | Cause et solution |
+|---|---|
+| Beaucoup de zones changées sans que rien ne bouge | Référence mémorisée alors que quelqu'un était dans le champ, ou carte qui a bougé : la refixer, puis **R** |
+| Grille presque vide (peu de cases colorées) | Rien à moins de 3 m : la scène est trop loin (ou le capteur mal orienté) : rapprocher la carte |
+| « Ligne ignorée : … (profil ou mode de la carte ?) » | La carte n'est pas en mode collecte (`APP_MODE 1`) ou un autre projet est flashé |
+
+## 5. Générer la librairie NanoEdge AI
 
 La librairie se génère dans **NanoEdge AI Studio**, le logiciel gratuit de ST (Windows ou Linux,
 téléchargeable sur st.com). Tu y importes les fichiers CSV, il compare des centaines d'algorithmes, puis il
@@ -123,8 +182,8 @@ version du Studio.
 
 - **Données** : au moins 200 à 300 signaux par classe, venant de 2 ou 3 passes variées. Pour « normal » : lumière allumée/éteinte, heures différentes.
   Pour « anomalie » : passages, objets ajoutés, retirés ou déplacés, tiroirs, portes.
-- **Données de test** : garde une passe de chaque classe à part (`--out test`, ou le dossier `tools/test/`
-  dans l'interface), pour la validation.
+- **Données de test** : garde une passe de chaque classe à part, pour la validation : relancer l'outil avec
+  `--out test` (les fichiers vont dans `tools/test/`).
 - **Format** : les fichiers sont déjà au bon format, une ligne par signal avec 512 entiers séparés par des
   virgules, sans en-tête.
 - **Rappel** : ces données servent seulement à **choisir l'algorithme**. La librairie générée ne contient
@@ -164,7 +223,7 @@ version du Studio.
 
    Il n'y a jamais de `knowledge.h` pour une librairie de détection d'anomalie.
 2. Mettre `APP_MODE` à `1` dans `Inc/app_config.h`.
-3. Recompiler, flasher, installer la carte face à la scène, puis la mettre sous tension (section 5).
+3. Recompiler, flasher, installer la carte face à la scène, puis la mettre sous tension (section 6).
 
 ### Variante : librairie de classification
 
@@ -197,7 +256,7 @@ pendant la première seconde (classification).
 `tests/data_synth/`. Ils permettent de vérifier le format, le benchmark, la compilation et l'intégration,
 mais pas d'obtenir un vrai modèle.
 
-## 5. Utilisation (APP_MODE = 1)
+## 6. Utilisation (APP_MODE = 1)
 
 Compiler avec `APP_MODE=1`, flasher, installer la carte, puis la mettre sous tension. Le terminal série
 (**115200 bauds**, comme dans le projet ST) est **facultatif** : la LED et le bouton suffisent.
@@ -226,7 +285,7 @@ désormais normale ne se corrige pas sur la carte : il faut recollecter et rég�
 un objet → alarme et `-` à sa place. On le remet → retour à la normale. On ajoute un objet puis on appuie sur
 B1 (court) → il fait désormais partie de la normalité.
 
-## 6. Réglages (`NUCLEO_L476RG_TOF_SENTINELLE/Inc/app_config.h`)
+## 7. Réglages (`NUCLEO_L476RG_TOF_SENTINELLE/Inc/app_config.h`)
 
 | Paramètre | Rôle | Si… |
 |---|---|---|
@@ -237,7 +296,7 @@ B1 (court) → il fait désormais partie de la normalité.
 | `SENT_MAX_MM` (3000) | Distance d'écrêtage | Grande pièce → 4000 |
 | `SENT_MAP_MIN_MM` / `SENT_MAP_SIGMAS` | Sensibilité de la carte des changements | Carte trop bavarde → augmenter |
 
-## 7. Limites connues
+## 8. Limites connues
 
 - **La connaissance est perdue à chaque redémarrage** : la carte réapprend au démarrage, ce qui est voulu
   ici. La sauvegarder en flash dépend de la version de la librairie NanoEdge et n'est pas implémenté.
@@ -246,7 +305,7 @@ B1 (court) → il fait désormais partie de la normalité.
 - **Lumière** : un soleil direct très fort dégrade les mesures du VL53L5CX. Il faut alors apprendre dans les
   mêmes conditions, ou ajouter des passes « normal » sous différents éclairages.
 
-## 8. Tests sur PC
+## 9. Tests sur PC
 
 ```bash
 cd tests
