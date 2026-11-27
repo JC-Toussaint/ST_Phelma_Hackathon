@@ -13,7 +13,7 @@ AI** de STMicroelectronics : sans caméra, sans cloud, tout se calcule dans le m
 
 Les deux projets partent de l'exemple fourni par ST pour le hackathon ([`ST-exemple/`](ST-exemple/README.md)).
 La fiche [`idees_tof_nanoedge.md`](idees_tof_nanoedge.md) rassemble d'autres idées de projets avec ce
-capteur.
+capteur, et avec la carte accéléromètre X-NUCLEO-IKS01A3.
 
 ---
 
@@ -50,7 +50,7 @@ NanoEdge AI Studio sur des exemples des deux classes :
 ├── outils/                     collecte NanoEdge commune (collecte_nanoedge.py + un profil JSON par projet)
 ├── cubeide_cible.py            remet la cible MCU des projets CubeIDE (« Not able to get mcu target »)
 ├── CUBEIDE_IMPORT.md           importer un projet dans CubeIDE sans le casser, et corriger les erreurs
-└── idees_tof_nanoedge.md       idées de projets avec ce capteur
+└── idees_tof_nanoedge.md       idées de projets avec ce capteur, et avec un accéléromètre (IKS01A3)
 ```
 
 **Base commune** : chaque projet CubeIDE est une **copie du projet fourni par ST**

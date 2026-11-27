@@ -1,4 +1,4 @@
-# Idées de projets : VL53L5CX (8×8) + NanoEdge AI + STM32L476
+# Idées de projets NanoEdge AI + STM32L476 : capteur ToF VL53L5CX (8×8), puis accéléromètre (IKS01A3)
 
 Matériel : NUCLEO-L476RG + X-NUCLEO-53L5A1 (capteur ToF multizone VL53L5CX, 8×8 zones, ~45° de champ, 15 Hz max en 8×8).
 
@@ -29,10 +29,13 @@ point unique), **1-classe**, **N-classes** et **extrapolation** (régression).
 
 ## 🧠 Ce que NanoEdge a d'unique
 
-### 4. Sentinelle qui apprend sa scène sur place ✅ (réalisée : voir `sentinelle/`)
-- Grâce à l'**apprentissage embarqué** (anomalie), la carte apprend en quelques minutes ce qui est
-  « normal » devant elle (bureau, porte, étagère), sans PC.
-- Elle signale ensuite toute anomalie : objet déplacé, intrusion, tiroir ouvert. Réapprentissage sur bouton.
+### 4. Sentinelle : surveiller une scène et expliquer l'alarme ✅ (réalisée : voir `sentinelle/`)
+- Réalisée en **classification** `normal` / `anomalie` : le modèle est appris dans NanoEdge AI Studio sur
+  des exemples de la scène (bureau, porte, étagère), puis tourne sur la carte, sans PC.
+- Elle signale toute anomalie (objet déplacé, intrusion, tiroir ouvert) et l'**explique** par une carte 8×8
+  de ce qui a changé.
+- Variante « pour aller plus loin » : une librairie **détection d'anomalie**, avec laquelle la carte apprend
+  elle-même sa scène normale et réapprend sur bouton (pas encore essayée sur la carte).
 
 ### 5. Surveillance machine / tapis roulant
 - Apprentissage du flux normal d'objets → détection de bourrage, objet couché, rythme anormal.
@@ -62,6 +65,71 @@ point unique), **1-classe**, **N-classes** et **extrapolation** (régression).
 ## Recommandation hackathon
 
 - **Pierre-Feuille-Ciseaux (1)** : résultat fun et sûr, démo interactive qui attire le public.
-- **+ Sentinelle (4)** pour montrer l'apprentissage embarqué de NanoEdge, souvent un critère des jurys ST.
+- **+ Sentinelle (4)** : surveillance de scène avec alarme expliquée. Pour montrer l'apprentissage embarqué
+  de NanoEdge, souvent un critère des jurys ST : sa variante détection d'anomalie, ou le ventilateur (10).
 
 Les deux partagent le même socle firmware : acquisition VL53L5CX → prétraitement → CSV UART pour la collecte.
+
+---
+
+# Autre carte d'extension : X-NUCLEO-IKS01A3 (capteurs de mouvement et d'environnement)
+
+Matériel : NUCLEO-L476RG + **X-NUCLEO-IKS01A3**, enfichée sur les mêmes connecteurs Arduino que la
+X-NUCLEO-53L5A1. Elle porte :
+- un accéléromètre et gyroscope 6 axes (**LSM6DSO**) et un second accéléromètre (**LIS2DW12**) ;
+- un magnétomètre (**LIS2MDL**), un capteur de pression (**LPS22HH**), d'humidité et de température
+  (**HTS221**, **STTS751**).
+
+L'accéléromètre est le capteur le plus classique pour NanoEdge AI, conçu d'abord pour les **vibrations** et
+les **mouvements** : des signaux temporels, son point fort.
+
+## 🔧 Le cas d'école : maintenance prédictive
+
+### 10. Ventilateur sous surveillance (détection d'anomalie, apprentissage sur la carte)
+- Carte fixée sur un petit ventilateur (PC ou USB) ; vibrations 3 axes échantillonnées vers 1 kHz.
+- La carte **apprend sur place** le ventilateur sain, puis détecte un défaut : un bout d'adhésif sur une
+  pale crée un balourd, un doigt qui freine, un ventilateur posé de travers.
+- Peu de données à collecter, résultat immédiat et très visuel : c'est le projet qui montre le mieux
+  l'**apprentissage embarqué** de NanoEdge.
+
+### 11. État d'une machine (N-classes)
+- Même montage, plusieurs états : arrêt / vitesse lente / vitesse rapide / défaut.
+
+### 12. Estimer une grandeur continue (extrapolation)
+- Vitesse du ventilateur, inclinaison, charge d'une machine à laver miniature : la librairie sort une
+  **valeur** au lieu d'une classe. C'est le seul type de projet NanoEdge qui le fait.
+
+## 🎮 Mouvement et gestes
+
+### 13. Baguette magique (N-classes)
+- Carte tenue en main ; accéléro + gyro 6 axes, ~100 Hz, fenêtres d'~1 s.
+- Classes : cercle / zigzag / frappe / « V »… pour piloter un jeu ou une présentation.
+- Ludique, et proche de Pierre-Feuille-Ciseaux dans la démarche.
+
+### 14. Reconnaissance d'activité (N-classes)
+- Carte portée à la ceinture ou au poignet : assis / marche / course / escaliers.
+- Classique et facile à tester sur soi.
+
+### 15. Toc-toc secret (N-classes)
+- Carte posée sur une table ou une porte : reconnaître une suite de coups frappés.
+- Une serrure à code, sans clavier.
+
+## 📦 Surveillance
+
+### 16. Colis sous surveillance (détection d'anomalie)
+- Accéléromètre + pression : chocs, chute, retournement pendant un transport.
+- Proche de Sentinelle (4), avec le mouvement au lieu de la scène.
+
+## Recommandation et réutilisation
+
+- **Ventilateur (10)** : le plus sûr pour un hackathon, et la vitrine de l'apprentissage sur la carte.
+- **Baguette magique (13)** : le plus ludique.
+- **Ce qui se réutilise du dépôt** : l'outil de collecte commun `outils/collecte_nanoedge.py`, qui affiche
+  déjà des **courbes à plusieurs axes** (`"affichage": {"type": "courbes", ...}` dans le profil, voir
+  `outils/README.md`, « Ajouter un projet ») ; la démarche collecte (`APP_MODE 0`) → Studio → intégration
+  (`APP_MODE 1`) ; la structure README / `DEMARRAGE.md` / présentation.
+- **Ce qui change** : le firmware de base, à partir d'un exemple du pack **X-CUBE-MEMS1** de ST au lieu de
+  X-CUBE-TOF1. Le capteur doit échantillonner à **fréquence fixe** : NanoEdge attend des signaux de longueur
+  et de cadence constantes.
+- À vérifier : selon sa version, NanoEdge AI Studio sait générer lui-même un firmware de collecte pour
+  certaines cartes et capteurs MEMS de ST, ce qui accélère le démarrage.
