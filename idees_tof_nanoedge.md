@@ -1,4 +1,4 @@
-# Idées de projets NanoEdge AI + STM32L476 : capteur ToF VL53L5CX (8×8), puis accéléromètre (IKS01A3)
+# Idées de projets NanoEdge AI + STM32L476 : capteur ToF VL53L5CX (8×8), puis accéléromètre (IKS01A2 / IKS01A3)
 
 Matériel : NUCLEO-L476RG + X-NUCLEO-53L5A1 (capteur ToF multizone VL53L5CX, 8×8 zones, ~45° de champ, 15 Hz max en 8×8).
 
@@ -72,13 +72,21 @@ Les deux partagent le même socle firmware : acquisition VL53L5CX → prétraite
 
 ---
 
-# Autre carte d'extension : X-NUCLEO-IKS01A3 (capteurs de mouvement et d'environnement)
+# Autre carte d'extension : X-NUCLEO-IKS01A2 ou IKS01A3 (capteurs de mouvement et d'environnement)
 
-Matériel : NUCLEO-L476RG + **X-NUCLEO-IKS01A3**, enfichée sur les mêmes connecteurs Arduino que la
-X-NUCLEO-53L5A1. Elle porte :
-- un accéléromètre et gyroscope 6 axes (**LSM6DSO**) et un second accéléromètre (**LIS2DW12**) ;
-- un magnétomètre (**LIS2MDL**), un capteur de pression (**LPS22HH**), d'humidité et de température
-  (**HTS221**, **STTS751**).
+Matériel : NUCLEO-L476RG + **X-NUCLEO-IKS01A2** ou **X-NUCLEO-IKS01A3**, enfichée sur les mêmes connecteurs
+Arduino que la X-NUCLEO-53L5A1. Les deux cartes se ressemblent ; seuls les capteurs changent :
+
+| | X-NUCLEO-IKS01A2 | X-NUCLEO-IKS01A3 |
+|---|---|---|
+| Accéléromètre + gyroscope 6 axes | **LSM6DSL** | **LSM6DSO** |
+| Autres capteurs de mouvement | LSM303AGR (accéléromètre + magnétomètre) | LIS2DW12 (accéléromètre), LIS2MDL (magnétomètre) |
+| Environnement | HTS221 (humidité, température), LPS22HB (pression) | HTS221, LPS22HH (pression), STTS751 (température) |
+| Pack X-CUBE-MEMS1 à utiliser | **9.6.0** (carte retirée en 10.0.0) | **11.2.0** (carte retirée en 12.0.0) |
+| Fonctions du pilote | `IKS01A2_MOTION_SENSOR_...`, capteur `IKS01A2_LSM6DSL_0` | `IKS01A3_MOTION_SENSOR_...`, capteur `IKS01A3_LSM6DSO_0` |
+
+Pour les idées ci-dessous, le **LSM6DSL** et le **LSM6DSO** jouent le même rôle (accéléromètre + gyroscope,
+104 Hz, FIFO) : tout ce qui est écrit pour l'un vaut pour l'autre.
 
 L'accéléromètre est le capteur le plus classique pour NanoEdge AI, conçu d'abord pour les **vibrations** et
 les **mouvements** : des signaux temporels, son point fort.
@@ -130,7 +138,8 @@ les **mouvements** : des signaux temporels, son point fort.
   `outils/README.md`, « Ajouter un projet ») ; la démarche collecte (`APP_MODE 0`) → Studio → intégration
   (`APP_MODE 1`) ; la structure README / `DEMARRAGE.md` / présentation.
 - **Ce qui change** : le firmware de base, à partir d'un exemple du pack **X-CUBE-MEMS1** de ST au lieu de
-  X-CUBE-TOF1. Le capteur doit échantillonner à **fréquence fixe** : NanoEdge attend des signaux de longueur
+  X-CUBE-TOF1, **dans la version qui prend encore en charge la carte** (tableau plus haut) : les versions
+  récentes du pack n'ont plus ni l'IKS01A2 ni l'IKS01A3. Le capteur doit échantillonner à **fréquence fixe** : NanoEdge attend des signaux de longueur
   et de cadence constantes.
 - À vérifier : selon sa version, NanoEdge AI Studio sait générer lui-même un firmware de collecte pour
   certaines cartes et capteurs MEMS de ST, ce qui accélère le démarrage.
@@ -142,7 +151,8 @@ une **trajectoire dans le temps**, 6 courbes d'accéléromètre et de gyroscope.
 lequel NanoEdge est le plus à l'aise.
 
 ### 1. Le matériel
-- NUCLEO-L476RG + X-NUCLEO-IKS01A3 ; on utilise le **LSM6DSO** (accéléromètre + gyroscope 6 axes).
+- NUCLEO-L476RG + X-NUCLEO-IKS01A2 (ou IKS01A3) ; on utilise le **LSM6DSL** (**LSM6DSO** sur l'IKS01A3),
+  accéléromètre + gyroscope 6 axes.
 - La carte tenue en main **est** la baguette. Marquer un repère « haut / avant » et la tenir toujours dans
   le même sens : les axes changent si on la tourne.
 - Le câble USB limite les gestes : un câble long suffit pour le hackathon (une version sans fil demanderait
@@ -165,13 +175,14 @@ Pierre-Feuille-Ciseaux, elle évite de reconnaître un geste à chaque mouvement
 
 ### 3. Le firmware, sur le modèle de Pierre-Feuille-Ciseaux
 
-Partir d'un **exemple du pack X-CUBE-MEMS1** de ST pour NUCLEO-L476RG + IKS01A3 (comme Pierre-Feuille-Ciseaux
-part de `ST-exemple/`), puis ajouter des fichiers sans modifier ceux de ST :
+Partir de l'application **DataLogTerminal** du pack X-CUBE-MEMS1 (9.6.0 pour l'IKS01A2, 11.2.0 pour
+l'IKS01A3), générée par STM32CubeIDE pour la NUCLEO-L476RG (comme Pierre-Feuille-Ciseaux part de
+`ST-exemple/`), puis ajouter des fichiers sans modifier ceux de ST :
 
 | Fichier | Rôle |
 |---|---|
 | `Inc/app_config.h` | `APP_MODE` (0 collecte, 1 reconnaissance), fréquence, fenêtre, seuils |
-| `Src/imu_sensor.c` | Initialisation du LSM6DSO par le BSP (`IKS01A3_MOTION_SENSOR_Init`, `..._SetOutputDataRate`, `..._GetAxes`) ; lecture à cadence fixe (interruption *data ready* ou FIFO) |
+| `Src/imu_sensor.c` | Initialisation du LSM6DSL par le BSP (`IKS01A2_MOTION_SENSOR_Init(IKS01A2_LSM6DSL_0, MOTION_ACCELERO \| MOTION_GYRO)`, `..._SetOutputDataRate`, `..._SetFullScale`, `..._GetAxes` ; préfixe `IKS01A3_` et `IKS01A3_LSM6DSO_0` sur l'IKS01A3) ; lecture à cadence fixe (interruption *data ready* ou FIFO) |
 | `Src/wand_preproc.c` | Tampon circulaire, déclenchement, fenêtre de 128 échantillons, mise à l'échelle : **code portable, testé sur PC** comme `tof_preproc.c` |
 | `Src/wand_ai.c` | Appel NanoEdge (`neai_classification`), noms et probabilités des classes : copie adaptée de `rps_ai.c` |
 | `Src/app.c` | Mode 0 : une ligne CSV par geste détecté. Mode 1 : nom du geste, probabilités en direct (comme la touche `d` de Pierre-Feuille-Ciseaux), LED |
@@ -203,7 +214,7 @@ Pierre-Feuille-Ciseaux. Viser **150 à 300 gestes par classe**, faits par plusie
 - Compiler avec Float ABI **hard** et FPU **fpv4-sp-d16**, puis intégrer `NanoEdgeAI.h` et `libneai.a`.
 
 ### 6. Planning indicatif pour le hackathon
-1. **Matin** : projet X-CUBE-MEMS1 importé, lecture des 6 axes à 104 Hz affichée sur l'UART.
+1. **Matin** : projet DataLogTerminal importé, lecture des 6 axes à 104 Hz affichée sur l'UART.
 2. Déclenchement et fenêtre ; collecte qui marche avec l'outil commun.
 3. **Midi** : collecte des 5 classes, benchmark.
 4. **Après-midi** : intégration, reconnaissance en direct, réglage des seuils.
