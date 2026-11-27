@@ -46,6 +46,7 @@ normale, puis surveille :
 │                                    DIFFERENCES_ST.md         différences avec le projet ST d'origine
 ├── outils/                     collecte NanoEdge commune (collecte_nanoedge.py + un profil JSON par projet)
 ├── cubeide_cible.py            remet la cible MCU des projets CubeIDE (« Not able to get mcu target »)
+├── CUBEIDE_IMPORT.md           importer un projet dans CubeIDE sans le casser, et corriger les erreurs
 └── idees_tof_nanoedge.md       idées de projets avec ce capteur
 ```
 
@@ -71,6 +72,9 @@ Le projet ST d'origine est fourni **zippé** dans `ST-exemple/NUCLEO_L476RG_TOF_
    dossier `NUCLEO_L476RG_TOF_<NOM>/` du projet. Régler le mode dans `Inc/app_config.h`, compiler et
    flasher.
 
+   > 📄 **Lire [`CUBEIDE_IMPORT.md`](CUBEIDE_IMPORT.md)** avant le premier import : le seul menu à utiliser,
+   > un workspace par dépôt, et la correction de chaque erreur d'import.
+   >
    > ⚠️ **« Not able to get mcu target »** au débogage, ou **« Program "make" not found »** : CubeIDE a
    > régénéré le `.cproject` à l'import et perdu la cible MCU. Importer **toujours** par *Existing
    > Projects into Workspace* (jamais *New > Makefile Project with Existing Code*). Si l'erreur apparaît :

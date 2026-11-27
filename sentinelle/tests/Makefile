@@ -6,7 +6,7 @@ SRCS   := test_host.c $(FW)/Src/scene_preproc.c
 test_host: $(SRCS) $(wildcard $(FW)/Inc/*.h)
 	$(CC) $(CFLAGS) -o $@ $(SRCS) -lm
 
-test: test_host collecte
+test: test_host collecte cubeide
 	./test_host
 
 # Outil de collecte commun (outils/) avec le profil de ce projet et ses lanceurs sentinel_logger*.py
@@ -19,4 +19,9 @@ synth: test_host
 clean:
 	rm -rf test_host data_synth
 
-.PHONY: test collecte synth clean
+.PHONY: test collecte cubeide synth clean
+
+# .cproject du projet CubeIDE : chaîne d'outils, cible MCU, script de liaison. CubeIDE les abîme parfois
+# à l'import (« make not found », « Not able to get mcu target ») : voir ../../CUBEIDE_IMPORT.md
+cubeide:
+	@python3 ../../cubeide_cible.py --check ../NUCLEO_*
