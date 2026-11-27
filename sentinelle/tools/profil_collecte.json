@@ -1,0 +1,18 @@
+{
+  "nom": "Sentinelle",
+  "classes": ["normal", "anomalie"],
+  "longueur": 512,
+  "affichage": {"type": "grille", "taille": 8, "trames": 8, "proche": "petit", "fond": 100,
+                "mm_par_unite": 30, "ecart_min": 4, "miroir_gauche_droite": false, "miroir_haut_bas": false},
+  "valeur_max": 100,
+  "par_passe": 300,
+  "bauds": 115200,
+  "dossier": ".",
+  "attente": "",
+  "conseil": {
+    "normal": "scène NORMALE : ne touche à rien. Refais des passes avec la lumière allumée/éteinte, à d'autres heures, avec de petites variations acceptables (chaise un peu déplacée…).",
+    "anomalie": "scène ANORMALE : pendant la passe, provoque des changements variés : passe devant, retire/ajoute/déplace des objets, ouvre un tiroir ou une porte…"
+  },
+  "import": "projet Anomaly detection : normal.csv -> « Regular signals », anomalie.csv -> « Abnormal signals ». Ces données servent seulement au benchmark (choix de l'algorithme) : la carte apprend ensuite la scène sur place.",
+  "demo_signaux_par_s": 2
+}

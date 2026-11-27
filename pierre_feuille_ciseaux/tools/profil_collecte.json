@@ -1,0 +1,13 @@
+{
+  "nom": "Pierre-Feuille-Ciseaux",
+  "classes": ["pierre", "feuille", "ciseaux"],
+  "longueur": 512,
+  "affichage": {"type": "grille", "taille": 8, "trames": 8, "min": 20, "miroir_gauche_droite": true, "miroir_haut_bas": false},
+  "valeur_max": 100,
+  "par_passe": 300,
+  "bauds": 115200,
+  "dossier": ".",
+  "attente": "En attente",
+  "conseil": "pendant une passe, varie la hauteur (10–20 cm), la position, la rotation et la main. Fais 2–3 passes par classe, avec plusieurs personnes.",
+  "demo_signaux_par_s": 5
+}

@@ -1,0 +1,38 @@
+# Projet ST d'origine décompressé (il est fourni zippé dans ST-exemple/)
+/NUCLEO_L476RG_TOF_VL53L5A1/
+
+# Artefacts de build STM32CubeIDE
+Debug/
+Release/
+*.o
+*.d
+*.su
+*.elf
+*.map
+*.list
+*.bin
+*.hex
+
+# Tests host (dans chaque projet)
+**/tests/test_host
+**/tests/data_synth/
+**/tests/*.out
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Métadonnées Windows (fichiers copiés depuis l'Explorateur)
+*:Zone.Identifier
+
+# Préférences locales de STM32CubeIDE (vue des registres SFR)
+*.sfrview.prefs
+
+# Signaux simulés de la collecte en démo (outils/collecte_nanoedge.py --demo)
+**/tools/demo/
+# Données augmentées (pierre_feuille_ciseaux/tools/augmente_pfc.py)
+**/tools/augmente*/
+
+# État local de STM32CubeIDE (fenêtres de débogage, chemins de la machine)
+*.launch
