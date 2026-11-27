@@ -23,7 +23,8 @@ capteur.
 Le capteur, posé à plat, regarde la main. Le STM32 reconnaît le geste et joue sa propre main :
 - un **adversaire adaptatif** apprend tes habitudes et joue ce qui les bat ;
 - une **empreinte publiée avant la partie** prouve qu'il ne triche pas ;
-- un mode « direct » affiche la probabilité de chaque classe, pour voir quand le modèle hésite.
+- un mode « direct » affiche la probabilité de chaque classe, pour voir quand le modèle hésite ;
+- **pas à pas** pour une première fois : [`pierre_feuille_ciseaux/DEMARRAGE.md`](pierre_feuille_ciseaux/DEMARRAGE.md).
 
 ### 🛡️ Sentinelle
 Posée face à un bureau, une étagère ou une porte, la carte **apprend seule** à quoi ressemble la scène
@@ -67,6 +68,16 @@ Le projet ST d'origine est fourni **zippé** dans `ST-exemple/NUCLEO_L476RG_TOF_
 
 ## Démarrage rapide
 
+0. **Logiciels à installer**, si possible **avant** le hackathon (téléchargements et installations
+   prennent du temps) :
+   - **NanoEdge AI Studio**, le logiciel gratuit de ST qui génère la librairie d'IA (Windows ou Linux) ;
+   - **STM32CubeIDE**, pour compiler et flasher le firmware ;
+   - **Python 3**, puis `pip install pyserial`, pour les outils de collecte ;
+   - un terminal série (Tera Term, PuTTY…).
+
+   Les deux logiciels de ST se téléchargent sur st.com, en général avec un compte myST gratuit : le créer
+   à l'avance. Lancer NanoEdge AI Studio une fois après l'installation, pour vérifier qu'il démarre.
+   Cloner ensuite ce dépôt **sur le disque Windows** (par exemple dans `Documents`).
 1. **Matériel** : enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG, puis brancher le câble USB (ST-LINK).
 2. **Firmware** : dans STM32CubeIDE, *File > Import > Existing Projects into Workspace*, puis choisir le
    dossier `NUCLEO_L476RG_TOF_<NOM>/` du projet. Régler le mode dans `Inc/app_config.h`, compiler et

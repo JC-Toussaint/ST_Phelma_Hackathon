@@ -2,6 +2,9 @@
 
 NUCLEO-L476RG + X-NUCLEO-53L5A1 (VL53L5CX, ToF 8×8) + **NanoEdge AI** (classification N-classes).
 
+> 🚀 **Première fois ?** Suivre [`DEMARRAGE.md`](DEMARRAGE.md) : toutes les opérations dans l'ordre, de
+> l'installation des logiciels à la première partie.
+
 Tu montres ta main au capteur, le STM32 reconnaît **pierre / feuille / ciseaux** et joue contre toi.
 Pour l'originalité, il propose aussi :
 
@@ -18,6 +21,7 @@ pierre_feuille_ciseaux/
 │   ├── Inc/, Src/             + app, tof_sensor, tof_preproc, rps_game, rps_ai, uart_io
 │   └── X-CUBE-TOF1/App/app_x-cube-tof1.c   modifié : appelle app_init() / app_loop() ; garde les
 │                                           réglages du capteur de l'exemple ST (et leurs commentaires)
+├── DEMARRAGE.md               les opérations dans l'ordre, pour une première fois
 ├── DIFFERENCES_ST.md          liste détaillée des différences avec le projet ST
 ├── tools/rps_logger_gui.py    collecte en interface graphique (tkinter), mode d'emploi en section 3
 ├── tools/rps_logger.py        la même chose en ligne de commande
