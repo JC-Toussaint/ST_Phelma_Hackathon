@@ -14,6 +14,13 @@
 #include <string.h>
 #include "NanoEdgeAI.h"   /* généré par NanoEdge AI Studio (projet Anomaly detection) */
 
+/* Une librairie de détection d'anomalie n'a pas de classes : NEAI_NUMBER_OF_CLASSES
+ * signale une librairie de classification (par exemple la librairie modèle de ST
+ * fournie dans le dépôt), qui n'a pas les fonctions neai_anomalydetection_*. */
+#if defined(NEAI_NUMBER_OF_CLASSES)
+#error "NanoEdgeAI.h vient d'une librairie de CLASSIFICATION (librairie modele de ST ?) : generer dans NanoEdge AI Studio un projet 'Anomaly detection', puis remplacer Inc/NanoEdgeAI.h et Src/libneai.a (voir sentinelle/README.md)"
+#endif
+
 #if defined(NEAI_INPUT_SIGNAL_LENGTH)
 #define SENT_NEAI_LEN  (NEAI_INPUT_SIGNAL_LENGTH * NEAI_INPUT_AXIS_NUMBER)
 #else
