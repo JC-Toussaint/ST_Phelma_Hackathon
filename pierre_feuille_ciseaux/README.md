@@ -19,9 +19,10 @@ pierre_feuille_ciseaux/
 │   └── X-CUBE-TOF1/App/app_x-cube-tof1.c   modifié : appelle app_init() / app_loop() ; garde les
 │                                           réglages du capteur de l'exemple ST (et leurs commentaires)
 ├── DIFFERENCES_ST.md          liste détaillée des différences avec le projet ST
-├── tools/rps_logger_gui.py    collecte en interface graphique (tkinter)
+├── tools/rps_logger_gui.py    collecte en interface graphique (tkinter), mode d'emploi en section 3
 ├── tools/rps_logger.py        la même chose en ligne de commande
 ├── tools/profil_collecte.json profil de ce projet pour l'outil commun outils/collecte_nanoedge.py
+├── img/collecte_gui.png       capture de l'interface de collecte
 └── tests/                     tests PC (make test) + CSV synthétiques (make synth)
 ```
 
@@ -66,10 +67,7 @@ viennent donc du projet ST : il n'y a rien à configurer.
    la façon dont ce profil se déduit du firmware, et pour `tools/augmente_pfc.py`, qui fabrique des
    variantes plausibles des signaux réels (rotation, autre main, vitesse…) et met une partie des vrais
    signaux de côté pour vérifier dans le Studio que cela aide.
-   L'interface graphique (tkinter, fourni avec Python sous Windows) affiche la grille 8×8 en direct et les
-   8 trames du signal, ainsi que les messages de la carte. Elle permet de choisir la classe (touches 1/2/3),
-   de lancer une passe avec compte à rebours (Espace), de suivre la progression et le nombre de signaux par
-   fichier, et d'**annuler la dernière passe** si elle est ratée.
+   Le mode d'emploi de l'interface graphique est juste après, dans « Utiliser l'interface de collecte ».
    La liaison série est **USART2 à 115200 bauds uniquement**, telle que le projet ST l'initialise : le
    firmware ne la reconfigure pas. À ce débit, la carte envoie un signal toutes les 3 trames
    (`PRE_DATALOG_EVERY`, 5 signaux/s) : une ligne de 512 valeurs prend jusqu'à 180 ms, et ce rythme
@@ -85,6 +83,62 @@ viennent donc du projet ST : il n'y a rien à configurer.
 ST. Chaque zone vaut 0 (fond) ou 20…100 (main,
 100 = point le plus proche). C'est donc un relief **indépendant de la hauteur de la main**, et la main est
 **recentrée** dans la grille avant envoi.
+
+### Utiliser l'interface de collecte (`rps_logger_gui.py`)
+
+![Interface de collecte en mode --demo, pendant une passe « feuille »](img/collecte_gui.png)
+
+*Capture en mode `--demo`, pendant une passe « feuille » : 45 signaux sur 300, environ 51 s restantes.*
+
+L'interface utilise tkinter, fourni avec Python sous Windows ; seul `pyserial` est à installer.
+
+**Les zones de la fenêtre**
+
+| Zone | Contenu |
+|---|---|
+| **Barre du haut** | *Port* : le port série de la carte (sous Windows, « STMicroelectronics STLink Virtual COM Port (COMx) ») ; ↻ relit la liste. Le débit (115200 bauds) vient du profil. *Connecter* / *Déconnecter*, puis l'état de la liaison (● vert = connecté). |
+| **Grille 8×8** (à gauche) | La dernière trame reçue, vue du dessus. Case sombre = fond (pas de main) ; couleur = main, du violet (le plus loin) au jaune (le plus proche). Le firmware **recentre** la main dans la grille avant l'envoi : la tache reste donc vers le centre même si la main est décalée. |
+| **Les 8 trames du signal** | Les 8 trames d'un signal, de la plus ancienne à la plus récente : c'est exactement ce qu'enregistre une ligne du CSV. |
+| **Affichage : miroir ↔ / ↕** | Retournent **seulement l'affichage**, pas les fichiers. À régler pour que la grille bouge dans le même sens que la main (voir l'étape 3 ci-dessous). |
+| **Ligne sous la grille** | « Signal reçu : 512 valeurs, N zones actives », ou « Aucun signal (rien devant le capteur ?) ». |
+| **Enregistrement** (à droite) | Une ligne par classe, avec sa touche (`1` pierre, `2` feuille, `3` ciseaux) et le **nombre de signaux déjà dans son fichier**. *Signaux par passe* (300). *Dossier* : où sont écrits les CSV (`tools/` par défaut, *…* pour en choisir un autre). |
+| **Enregistrer / Arrêter (Espace)** | Lance une passe pour la classe cochée, après un compte à rebours de 3 s affiché sur la grille, ou l'arrête avant la fin. |
+| **Annuler la dernière passe** | Retire du fichier les signaux de la **dernière** passe, après confirmation. Une seule passe peut être annulée. |
+| **Barre de progression** | Classe en cours, signaux enregistrés sur la cible, durée restante ; un bip à la fin. En dessous, l'astuce du profil. |
+| **Messages de la carte** | Les lignes `#` envoyées par la carte (« mode COLLECTE », « En attente d'une main… », qui se remplace au lieu de s'empiler), et celles de l'outil : connexion, fichiers, erreurs en orange ou rouge. |
+| **Barre du bas** | Signaux reçus par seconde (**~5** avec une main au-dessus du capteur) et dossier des CSV. |
+
+**Déroulement d'une collecte**
+
+1. Flasher la carte en `APP_MODE 0`, **fermer Tera Term** (ou tout terminal série), puis lancer
+   `python tools/rps_logger_gui.py`.
+2. Choisir le port, puis *Connecter*. Les messages affichent « Pierre-Feuille-Ciseaux : mode COLLECTE »,
+   puis « En attente d'une main… » tant qu'aucune main n'est au-dessus du capteur.
+3. Placer la main **10 à 18 cm environ** au-dessus du capteur (au-delà de 20 cm, `PRE_FAR_MM`, elle est
+   prise pour le fond) : la grille s'allume et le compteur du bas monte vers
+   5 signaux/s. **Vérifier le sens** : déplacer la main vers la droite, puis vers soi. Si la tache part dans
+   l'autre sens sur l'écran, cocher ou décocher *miroir ↔* ou *miroir ↕* (sans effet sur les fichiers).
+4. Choisir la classe avec `1`, `2` ou `3`, puis **Espace**. Prendre la pose pendant le compte à rebours ;
+   l'enregistrement dure ~60 s pour 300 signaux. **Pendant la passe, faire varier** la hauteur, la position,
+   la rotation et l'inclinaison de la main, sans jamais changer de geste. Si la main sort du champ, la carte
+   n'envoie plus rien et la passe se met en pause.
+5. Passe ratée (mauvais geste, main sortie trop souvent) : **Annuler la dernière passe**.
+6. Recommencer pour les trois classes, **2 ou 3 passes chacune**, si possible avec d'autres personnes et une
+   autre main. Viser des nombres de signaux proches pour les trois classes.
+
+Les fichiers `pierre.csv`, `feuille.csv` et `ciseaux.csv` sont alors prêts pour NanoEdge AI Studio
+(section 4). Pour découvrir l'interface sans carte : `python tools/rps_logger_gui.py --demo`. Les signaux
+simulés ne ressemblent pas à une main et vont dans `tools/demo/`, jamais avec les vraies données.
+
+**Problèmes fréquents**
+
+| Symptôme | Cause et solution |
+|---|---|
+| « Ouverture de COMx impossible … Le port est déjà utilisé » | Tera Term, une autre fenêtre de collecte ou la console série de CubeIDE garde le port : la fermer, puis *Connecter* |
+| Liste des ports vide | Câble USB débranché, ou câble de charge seule : rebrancher, puis ↻ |
+| « Ligne ignorée : … (profil ou mode de la carte ?) » | La carte n'est pas en mode collecte (`APP_MODE 1`) ou un autre projet est flashé |
+| « Aucun signal » alors que la main est là | Main hors de la plage 40–200 mm, ou vue sur moins de `PRE_MIN_HAND_ZONES` (5) zones : la rapprocher. Pour changer la plage, voir [REGLAGE_DISTANCE.md](REGLAGE_DISTANCE.md) |
+| `1`, `2`, `3` ou Espace sans effet | Le curseur est dans un champ (*Dossier*, *Signaux par passe*) : cliquer sur la grille, puis réessayer |
 
 ## 4. Générer la librairie NanoEdge AI
 
