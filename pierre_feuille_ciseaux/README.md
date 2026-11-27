@@ -29,6 +29,7 @@ pierre_feuille_ciseaux/
 ├── tools/rps_logger.py        la même chose en ligne de commande
 ├── tools/profil_collecte.json profil de ce projet pour l'outil commun outils/collecte_nanoedge.py
 ├── img/collecte_gui.png       capture de l'interface de collecte
+├── pierre_feuille_ciseaux.pptx  présentation du projet (diapositives tirées de ce README)
 └── tests/                     tests PC (make test) + CSV synthétiques (make synth)
 ```
 
