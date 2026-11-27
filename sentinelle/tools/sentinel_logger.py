@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-sentinel_logger.py - Collecte de la Sentinelle pour le BENCHMARK de NanoEdge AI Studio, dans le terminal.
+sentinel_logger.py - Collecte de la Sentinelle pour NanoEdge AI Studio, dans le terminal.
 
 Lanceur de l'outil commun du dépôt (outils/collecte_nanoedge.py, mode ligne de commande) avec le
 profil de ce projet (profil_collecte.json). Le firmware (APP_MODE_DATALOG) envoie une ligne CSV par
 signal : 8 trames x 64 zones = 512 entiers 0..100 (100 * distance / SENT_MAX_MM).
-Rappel : ces données servent uniquement à choisir le bon algorithme dans le Studio ; la
-« connaissance » réelle est apprise ensuite SUR LA CARTE, à l'endroit surveillé.
+Dans le Studio, projet "N-Class classification" : le modèle apprend à partir de ces fichiers ;
+les collecter sur la scène qui sera surveillée.
 
 Exemples :
     python sentinel_logger.py --port COM5 --view               # visualiser la scène

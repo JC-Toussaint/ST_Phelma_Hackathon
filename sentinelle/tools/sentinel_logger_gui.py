@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-sentinel_logger_gui.py - Collecte graphique de la Sentinelle pour le BENCHMARK de NanoEdge AI Studio.
+sentinel_logger_gui.py - Collecte graphique de la Sentinelle pour NanoEdge AI Studio.
 
 Lanceur de l'outil commun du dépôt (outils/collecte_nanoedge.py) avec le profil de ce projet
 (profil_collecte.json : classes normal / anomalie, signaux de 8 trames 8x8 = 512 valeurs,
-valeur = 100 * distance / 3000 mm). Rappel : ces données servent uniquement à choisir l'algorithme
-dans le Studio (projet "Anomaly detection") ; la connaissance réelle est apprise ensuite SUR LA CARTE.
+valeur = 100 * distance / 3000 mm). Dans le Studio, projet "N-Class classification" : le modèle
+apprend à partir de ces fichiers à distinguer la scène normale d'une anomalie. Les collecter sur la
+scène qui sera surveillée.
 
   - scène 8x8 en direct (proche = clair, loin = sombre, case vide = pas de cible), distances en cm (D) ;
   - « scène de référence » (R) + vue des ÉCARTS (E) : + apparu / − disparu, au-delà de 120 mm comme la

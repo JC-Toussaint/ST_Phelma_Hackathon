@@ -36,8 +36,9 @@ Il faut prévoir à peu près :
 - ⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
   sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
 - Enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG, puis la brancher en USB (ST-LINK).
-- Poser la carte **face à la scène** (bureau, étagère, porte), à 0,5–3 m, et **la fixer** : si elle bouge,
-  toute la scène change.
+- Poser la carte **face à la scène** (bureau, étagère, porte), à 0,5–3 m, et **la fixer à sa place
+  définitive** : le modèle apprend la scène vue depuis cet endroit ; si la carte bouge, toute la scène
+  change.
 
 ## 2. Firmware de collecte (README, section 2)
 
@@ -58,8 +59,8 @@ Il faut prévoir à peu près :
    et déplacer un objet : la vue **Écarts** doit montrer des `+` / `−` au bon endroit.
 4. Classe **`1` normal**, **Espace**, puis **sortir du champ** pendant le compte à rebours. Ne rien
    toucher pendant ~2 min 30.
-5. Classe **`2` anomalie**, **Espace**, puis provoquer des changements variés pendant toute la passe :
-   passer devant, ajouter, retirer ou déplacer des objets, ouvrir un tiroir.
+5. Classe **`2` anomalie**, **Espace**, puis provoquer pendant toute la passe tout ce qui doit déclencher
+   l'alarme : passer devant, ajouter, retirer ou déplacer des objets, ouvrir un tiroir.
 6. Faire **2 ou 3 passes par classe** (lumière allumée ou éteinte, autres heures). Une passe ratée se
    retire avec *Annuler la dernière passe*.
 7. **Garder une passe de chaque classe pour la validation** : relancer l'outil avec `--out test`, puis
@@ -72,29 +73,30 @@ Les fichiers obtenus sont `tools/normal.csv` et `tools/anomalie.csv`, plus ceux 
 
 ## 4. Générer la librairie dans NanoEdge AI Studio (README, section 5)
 
-1. Créer un projet **Anomaly detection**, avec la cible **STM32L476RG** et le capteur **Generic, 1 axe**.
-2. Importer `normal.csv` en *Regular signals* et `anomalie.csv` en *Abnormal signals* (*Import from file*,
-   séparateur virgule).
-3. Lancer le **benchmark**. Viser une précision équilibrée (*balanced accuracy*) d'au moins 90 %. Sinon,
-   ajouter des passes « normal » plus variées et relancer.
-4. **Valider** dans l'émulateur : apprentissage avec des signaux normaux, puis détection sur les fichiers
-   de `tools/test/`. Noter le nombre minimal d'apprentissages conseillé : s'il dépasse 40, le reporter
-   dans `SENT_LEARN_SIGNALS` (`Inc/app_config.h`).
+1. Créer un projet **N-Class classification**, avec la cible **STM32L476RG** et le capteur **Generic,
+   1 axe**.
+2. Importer `normal.csv` et `anomalie.csv` (*Import from file*, séparateur virgule), une classe par
+   fichier. **Garder le nom de classe `normal`** : le firmware s'en sert.
+3. Lancer le **benchmark**. Viser une précision équilibrée (*balanced accuracy*) d'au moins 90 %. Des
+   signaux normaux classés « anomalie » donneront de fausses alarmes : ajouter des passes « normal » plus
+   variées et relancer.
+4. **Valider** dans l'émulateur avec les fichiers de `tools/test/`.
 5. **Compiler** avec **Float ABI hard** et **FPU fpv4-sp-d16**. Le Studio produit un `.zip`.
-
-Une librairie **N-Class classification** avec les classes `normal` et `anomalie` marche aussi, mais le
-modèle est alors figé : la carte n'apprend plus sur place (README, fin de la section 5).
 
 ## 5. Intégrer la librairie et surveiller (README, section 6)
 
 1. Copier depuis le `.zip` dans `NUCLEO_L476RG_TOF_SENTINELLE/` : `Inc/NanoEdgeAI.h` et `Src/libneai.a`.
 2. Passer `APP_MODE` à **1** dans `Inc/app_config.h`, recompiler, puis flasher.
-3. Au démarrage, la LED clignote lentement : **sortir du champ**. Elle reste allumée ~21 s pendant
-   l'apprentissage, puis s'éteint : la surveillance commence.
+3. Mettre la carte sous tension **à sa place, scène normale, personne devant** : la carte prend pendant
+   1 s l'image de référence de la carte des changements, puis surveille aussitôt. LED éteinte =
+   surveillance, LED qui clignote vite = alarme.
 4. Facultatif : terminal série à **115200 bauds**, pour lire les alarmes et la carte des changements
-   (`v` similarité en continu, `c` carte, `h` menu).
-5. Un changement désormais normal : **B1 appui court**, pour l'ajouter à la normale. Carte déplacée :
-   **B1 appui long**, pour tout réapprendre.
+   (`v` proba normal en continu, `c` carte, `+` / `-` seuil, `h` menu).
+5. Une situation désormais normale déclenche l'alarme : recollecter dans cette situation (classe
+   « normal ») et régénérer la librairie.
+
+Pour aller plus loin, une librairie **Anomaly detection** fait apprendre la scène à la carte elle-même
+(README, section 9).
 
 ---
 
@@ -104,7 +106,7 @@ modèle est alors figé : la carte n'apprend plus sur place (README, fin de la s
 |---|---|
 | L'outil de collecte ne peut pas ouvrir le port COM | Le terminal série ou la console de CubeIDE le garde : les fermer. Un seul programme à la fois sur le port |
 | CubeIDE affiche « Default », « make not found » ou « Not able to get mcu target » | Le projet a été mal importé : suivre [`CUBEIDE_IMPORT.md`](../CUBEIDE_IMPORT.md) |
-| `ERREUR : init NanoEdge (pas de classe "normal" dans la librairie) (code -2)` au démarrage | La librairie de ST est encore là : générer et copier la vôtre |
-| Fausses alarmes à répétition | La carte a bougé, ou l'apprentissage s'est fait avec quelqu'un dans le champ : refixer la carte, puis B1 appui long |
+| `ERREUR : init NanoEdge (pas de classe "normal" dans la librairie) (code -2)` au démarrage | La librairie de ST est encore là, ou la classe ne s'appelle pas `normal` : générer et copier la vôtre |
+| Fausses alarmes à répétition | La carte a bougé depuis la collecte, quelqu'un était devant au démarrage, ou la situation manque dans « normal » : refixer la carte, RESET, ou recollecter et régénérer |
 | Votre librairie a disparu après un `git stash` ou un `git checkout` | Ces commandes remettent la librairie de ST : **garder une copie** de votre `NanoEdgeAI.h` et de votre `libneai.a` hors du dépôt |
 | Envie de régénérer le code depuis le `.ioc` | À éviter : voir [`DIFFERENCES_ST.md`](DIFFERENCES_ST.md), section 5 |

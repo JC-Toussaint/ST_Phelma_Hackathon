@@ -10,9 +10,9 @@
   "dossier": ".",
   "attente": "",
   "conseil": {
-    "normal": "scène NORMALE : ne touche à rien. Refais des passes avec la lumière allumée/éteinte, à d'autres heures, avec de petites variations acceptables (chaise un peu déplacée…).",
+    "normal": "scène NORMALE, personne dans le champ : lance la passe puis sors du champ. Refais des passes avec la lumière allumée/éteinte, à d'autres heures, avec de petites variations acceptables (chaise un peu déplacée…) : ce qui n'est pas dans « normal » déclenchera une alarme.",
     "anomalie": "scène ANORMALE : pendant la passe, provoque des changements variés : passe devant, retire/ajoute/déplace des objets, ouvre un tiroir ou une porte…"
   },
-  "import": "projet Anomaly detection : normal.csv -> « Regular signals », anomalie.csv -> « Abnormal signals ». Ces données servent seulement au benchmark (choix de l'algorithme) : la carte apprend ensuite la scène sur place.",
+  "import": "projet N-Class classification : importer normal.csv et anomalie.csv, une classe par fichier, en gardant les noms normal et anomalie (le firmware cherche la classe « normal »).",
   "demo_signaux_par_s": 2
 }

@@ -5,7 +5,7 @@
  *   make test
  *   ./test_host --gen-csv data_synth [n]
  *        -> normal.csv / anomalie.csv SYNTHÉTIQUES pour essayer la chaîne
- *           NanoEdge AI Studio (Anomaly detection, 512 valeurs par signal) sans matériel.
+ *           NanoEdge AI Studio (N-Class classification, 512 valeurs par signal) sans matériel.
  */
 #include <stdio.h>
 #include <stdlib.h>

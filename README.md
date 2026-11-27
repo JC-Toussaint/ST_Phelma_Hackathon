@@ -9,7 +9,7 @@ AI** de STMicroelectronics : sans caméra, sans cloud, tout se calcule dans le m
 | Projet | Idée | IA NanoEdge | Outils PC |
 |---|---|---|---|
 | [**Pierre-Feuille-Ciseaux**](pierre_feuille_ciseaux/README.md) | Jouer contre le STM32 avec la main au-dessus du capteur | Classification (pierre, feuille, ciseaux) | Collecte (graphique et ligne de commande), augmentation des données |
-| [**Sentinelle**](sentinelle/README.md) | Surveiller une scène : la carte apprend sur place ce qui est « normal » et signale tout changement | Détection d'anomalie, **apprentissage embarqué** | Collecte (graphique et ligne de commande) |
+| [**Sentinelle**](sentinelle/README.md) | Surveiller une scène et signaler tout ce qui n'est pas « normal », en montrant où la scène a changé | Classification (normal, anomalie) | Collecte (graphique et ligne de commande) |
 
 Les deux projets partent de l'exemple fourni par ST pour le hackathon ([`ST-exemple/`](ST-exemple/README.md)).
 La fiche [`idees_tof_nanoedge.md`](idees_tof_nanoedge.md) rassemble d'autres idées de projets avec ce
@@ -27,10 +27,11 @@ Le capteur, posé à plat, regarde la main. Le STM32 reconnaît le geste et joue
 - **pas à pas** pour une première fois : [`pierre_feuille_ciseaux/DEMARRAGE.md`](pierre_feuille_ciseaux/DEMARRAGE.md).
 
 ### 🛡️ Sentinelle
-Posée face à un bureau, une étagère ou une porte, la carte **apprend seule** à quoi ressemble la scène
-normale, puis surveille :
+Posée face à un bureau, une étagère ou une porte, la carte reconnaît une scène **normale** d'une
+**anomalie** (quelqu'un qui passe, un objet ajouté, retiré ou déplacé), grâce à un modèle appris dans
+NanoEdge AI Studio sur des exemples des deux classes :
 - l'**alarme est expliquée** par une carte 8×8 qui montre ce qui est apparu ou a disparu ;
-- un appui sur B1 ajoute la situation actuelle à la normale (**apprentissage incrémental**) ;
+- elle surveille **seule, dès la mise sous tension**, sans PC ;
 - **pas à pas** pour une première fois : [`sentinelle/DEMARRAGE.md`](sentinelle/DEMARRAGE.md).
 
 ---
@@ -117,7 +118,7 @@ Le projet ST d'origine est fourni **zippé** dans `ST-exemple/NUCLEO_L476RG_TOF_
    par classe, enregistré à côté du script. L'outil est commun aux deux projets
    ([`outils/`](outils/README.md)) ; chaque projet le décrit par un profil JSON.
 2. **Générer la librairie** dans **NanoEdge AI Studio**, le logiciel gratuit de ST :
-   - type de projet : *N-Class classification* (Pierre-Feuille-Ciseaux) ou *Anomaly detection* (Sentinelle) ;
+   - type de projet : *N-Class classification* ;
    - cible : STM32L476RG ;
    - lancer le benchmark, puis compiler avec **Float ABI hard** et **FPU fpv4-sp-d16**.
 3. **Intégrer** : remplacer `Inc/NanoEdgeAI.h` et `Src/libneai.a` dans le projet CubeIDE, puis passer en
@@ -140,8 +141,8 @@ cd <projet>/tests && make test
 > Les firmwares ont été compilés sur PC avec les en-têtes réels du projet ST, et les outils PC ont été
 > testés en mode démo. Les deux projets ont été essayés sur la carte : Pierre-Feuille-Ciseaux (collecte,
 > jeu, probabilités en direct) et la Sentinelle (collecte, surveillance avec une librairie de classification
-> `normal` / `anomalie`). Le mode Anomaly detection de la Sentinelle (apprentissage embarqué) reste à
-> valider sur la carte.
+> `normal` / `anomalie`). La variante Anomaly detection de la Sentinelle (apprentissage sur la carte,
+> « Pour aller plus loin ») reste à valider sur la carte.
 
 ## À savoir
 

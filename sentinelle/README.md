@@ -1,14 +1,18 @@
-# Sentinelle : une carte qui apprend sa scène sur place
+# Sentinelle : une carte qui surveille une scène et explique ses alarmes
 
-NUCLEO-L476RG + X-NUCLEO-53L5A1 (VL53L5CX, ToF 8×8) + **NanoEdge AI Anomaly detection, apprentissage
-embarqué**.
+NUCLEO-L476RG + X-NUCLEO-53L5A1 (VL53L5CX, ToF 8×8) + **NanoEdge AI** (classification N-classes :
+`normal` / `anomalie`).
 
-Tu poses la carte face à un bureau, une étagère ou une porte, puis tu la mets sous tension. En ~25 s, elle
-apprend **seule, sans PC**, à quoi ressemble la scène normale. Elle surveille ensuite et signale tout
-changement :
+> 🚀 **Première fois ?** Suivre [`DEMARRAGE.md`](DEMARRAGE.md) : toutes les opérations dans l'ordre, de
+> l'installation des logiciels à la surveillance.
+
+Tu poses la carte face à un bureau, une étagère ou une porte. Avec la collecte, tu montres à NanoEdge AI
+Studio des exemples de scène **normale** et des exemples d'**anomalies** : quelqu'un qui passe, un objet
+ajouté, retiré ou déplacé. Le Studio en tire un modèle de classification, qui tourne ensuite **sur le STM32,
+sans PC** : la carte surveille la scène dès la mise sous tension et signale tout ce qui n'est pas normal :
 
 ```
-[3:42] !!! ALARME #2 : la scene a change (similarite 41%)
+[3:42] !!! ALARME #2 : la scene a change (proba normal 12%)
     Carte des changements (+ apparu/rapproche, - disparu/eloigne) : 3 zone(s)
       . . . . . . . .
       . . . . . . . .
@@ -18,25 +22,20 @@ changement :
       . . . . . . - -
       . . . . . . - .
       . . . . . . . .
-    [B1 court] si c'est normal desormais.
-[3:51] Retour a la normale apres 9 s (similarite mini 38%)
+    Si c'est normal desormais : recollecter et regenerer la librairie.
+[3:51] Retour a la normale apres 9 s (proba normal mini 8%)
 ```
-
-> 🚀 **Première fois ?** Suivre [`DEMARRAGE.md`](DEMARRAGE.md) : toutes les opérations dans l'ordre, de
-> l'installation des logiciels à la surveillance.
 
 Ce qui la rend originale :
 
-- **Apprentissage embarqué** (ce que NanoEdge a d'unique) : le modèle n'est pas entraîné sur PC. La carte
-  apprend son environnement là où elle est installée, et on peut la déplacer et lui faire réapprendre en
-  appuyant sur un bouton.
-- **Apprentissage incrémental** : *« oui, ce changement est normal maintenant »*. Un appui court sur B1
-  ajoute la nouvelle situation à la connaissance existante, sans tout effacer.
-- **Alarme expliquée** : NanoEdge donne un score de similarité (0–100 %). En parallèle, la carte apprend la
-  moyenne et l'écart-type de chaque zone, ce qui permet d'afficher **où** la scène a changé et **dans quel
-  sens** (`+` objet apparu / quelqu'un devant, `-` objet disparu).
+- **IA embarquée, sans caméra** : le modèle NanoEdge calcule sur le STM32 la **probabilité que la scène
+  soit normale**, à partir de 64 distances seulement : aucune image n'est prise.
+- **Alarme expliquée** : l'IA dit **s'il y a** une anomalie ; une carte 8×8, calculée sans IA, montre
+  **où** la scène a changé et **dans quel sens** (`+` objet apparu ou quelqu'un devant, `-` objet disparu).
 - **Alarme avec hystérésis** : il faut 3 signaux anormaux d'affilée pour lever l'alarme, et 3 normaux pour la
   retirer. Il n'y a donc pas de fausse alerte sur une mesure bruitée.
+- **Autonome** : une fois la librairie intégrée, la carte surveille seule ; la LED clignote en cas d'alarme,
+  et le terminal série, facultatif, détaille chaque alarme.
 
 ```
 sentinelle/
@@ -64,8 +63,9 @@ sentinelle/
   (ST-LINK). Il alimente la carte ; le terminal série reste facultatif en surveillance.
 - **Poser la carte face à la scène** à surveiller (bureau, étagère, porte), capteur tourné vers elle, à
   **0,5–3 m**. Au-delà de 3 m (`SENT_MAX_MM`), tout est compté comme « loin ».
-- **Fixer la carte** (adhésif, support, pile de livres) : le moindre déplacement du capteur change toute la
-  scène et déclenche une alarme, ou fausse une collecte.
+- **Fixer la carte** (adhésif, support, pile de livres), **à la même place pour la collecte et pour la
+  surveillance** : le modèle apprend la scène vue depuis cet endroit. Si la carte bouge, toute la scène
+  change et l'alarme se déclenche.
 - Éviter le **soleil direct** sur la scène ou sur le capteur : il dégrade les mesures.
 
 ## 2. Projet STM32CubeIDE
@@ -80,29 +80,32 @@ l'application a été ajoutée (voir `DIFFERENCES_ST.md`). Le brochage, l'I2C, l
    dans `Inc/app_config.h`.
 3. Compiler, puis flasher via le ST-LINK.
 
-⚠️ Le mode `1` demande votre librairie NanoEdge (section 5) : la librairie modèle fournie par ST, de
-classification sans classe `normal`, s'arrête sur « init NanoEdge ».
+⚠️ Le mode `1` demande votre librairie NanoEdge (section 5) : la librairie modèle fournie par ST n'a pas
+de classe `normal` et s'arrête sur « init NanoEdge ».
 ⚠️ Ne pas régénérer le code depuis le `.ioc` sans précaution (voir `DIFFERENCES_ST.md`, section 5).
 
-> **Deux types de librairie NanoEdge sont acceptés** (détail à la fin de la section 5) :
-> - **Anomaly detection** (le projet est conçu pour elle) : la carte **apprend sur place** sa scène normale ;
->   les CSV ne servent qu'à choisir l'algorithme.
-> - **N-Class classification** avec les classes `normal` et `anomalie` : le modèle est **appris dans le
->   Studio** avec vos CSV et figé ; la carte surveille dès le démarrage, sans phase d'apprentissage.
+## 3. Comment la carte décide
 
-## 3. Pourquoi collecter des données si l'apprentissage est embarqué ?
+1. **Un signal** = 8 trames 8×8 consécutives (~0,5 s), soit 512 distances.
+2. **NanoEdge** classe le signal et renvoie la probabilité de chaque classe. La carte garde celle de
+   `normal` : c'est la **« proba normal »** affichée (0–100 %).
+3. **Alarme** : sous le seuil (90 % par défaut) pendant 3 signaux d'affilée, l'alarme se lève ; au-dessus
+   pendant 3 signaux, elle retombe.
+4. **Carte des changements** : au démarrage, la carte mémorise pendant 1 s une image de référence de la
+   scène (moyenne et écart-type de chaque zone). À chaque alarme, elle compare la scène actuelle à cette
+   référence et affiche les zones qui ont changé. **Cette partie n'utilise pas l'IA.**
 
-Le Studio a besoin d'exemples pour **choisir l'algorithme** (prétraitement et modèle) le mieux adapté à ce
-type de signal. La librairie générée ne contient **aucune connaissance**, juste l'algorithme vierge. La
-connaissance est apprise ensuite sur la carte, à son emplacement final.
-
-Le benchmark peut donc se faire **sur une scène différente** de celle qui sera surveillée, tant qu'elle est
-du même genre (bureau, pièce, porte…).
+Conséquences pratiques :
+- le modèle ne connaît que ce que la collecte lui a montré : **collecter sur la scène qui sera surveillée**,
+  depuis la même place, et mettre dans « normal » toutes les variations acceptables (lumière, chaise un peu
+  déplacée…), sinon elles déclencheront une alarme ;
+- **au démarrage, la scène doit être normale**, personne devant, puisque l'image de référence est prise à
+  ce moment. Pour la reprendre : bouton RESET (noir).
 
 ## 4. Collecte (APP_MODE = 0)
 
-1. Compiler avec `APP_MODE=0` (valeur par défaut), flasher, puis installer la carte face à la scène
-   (section 1).
+1. Compiler avec `APP_MODE=0` (valeur par défaut), flasher, puis installer la carte face à la scène, à sa
+   place définitive (section 1).
 2. Sur le PC : `pip install pyserial`, puis :
    ```bash
    python tools/sentinel_logger_gui.py                  # interface graphique (recommandé)
@@ -120,13 +123,14 @@ du même genre (bureau, pièce, porte…).
    - **normal** : scène immobile, **personne dans le champ** (lancer la passe, puis sortir du champ
      pendant le compte à rebours). Plusieurs passes : lumière allumée ou éteinte, heures différentes,
      petites variations acceptables (chaise un peu déplacée…).
-   - **anomalie** : passer devant, retirer, ajouter ou déplacer des objets, ouvrir un tiroir… le plus varié
-     possible.
+   - **anomalie** : tout ce qui doit déclencher l'alarme : passer devant, retirer, ajouter ou déplacer des
+     objets, ouvrir un tiroir ou une porte… le plus varié possible.
+   - Viser des **nombres de signaux proches** pour les deux classes.
 
 **Format d'un signal** : 8 trames × 64 zones = 512 entiers, la même taille que la librairie modèle du projet
 ST. Chaque zone vaut `100 × distance / 3000 mm` (1 unité = 30 mm) ; **100** = 3 m ou plus, ou pas de cible.
 Contrairement à Pierre-Feuille-Ciseaux, rien n'est recentré : on garde les **distances absolues de toute la
-scène**, puisque c'est elle qu'on apprend.
+scène**, puisque c'est elle qu'on surveille.
 
 ### Utiliser l'interface de collecte (`sentinel_logger_gui.py`)
 
@@ -155,7 +159,7 @@ outils en plus pour une scène :
 2. Scène normale, personne devant : appuyer sur **R** pour mémoriser la référence. La vue Écarts doit
    montrer très peu de zones changées.
 3. **Vérifier que les anomalies sont vues** : passer devant, déplacer un objet. Les `+` / `−` doivent
-   apparaître au bon endroit ; un objet trop petit ou trop loin ne sera pas vu non plus par la carte.
+   apparaître au bon endroit ; un objet trop petit ou trop loin ne sera pas vu non plus par le modèle.
 4. Choisir `1` (normal), appuyer sur **Espace** et **sortir du champ** pendant le compte à rebours. Ne
    rien toucher pendant ~2 min 30.
 5. Choisir `2` (anomalie), **Espace**, puis provoquer des changements variés pendant toute la passe.
@@ -180,35 +184,31 @@ version du Studio.
 
 ### Avant de commencer
 
-- **Données** : au moins 200 à 300 signaux par classe, venant de 2 ou 3 passes variées. Pour « normal » : lumière allumée/éteinte, heures différentes.
-  Pour « anomalie » : passages, objets ajoutés, retirés ou déplacés, tiroirs, portes.
+- **Données** : au moins 200 à 300 signaux par classe, venant de 2 ou 3 passes variées, **sur la scène qui
+  sera surveillée**. Pour « normal » : lumière allumée/éteinte, heures différentes. Pour « anomalie » :
+  passages, objets ajoutés, retirés ou déplacés, tiroirs, portes.
 - **Données de test** : garde une passe de chaque classe à part, pour la validation : relancer l'outil avec
   `--out test` (les fichiers vont dans `tools/test/`).
 - **Format** : les fichiers sont déjà au bon format, une ligne par signal avec 512 entiers séparés par des
   virgules, sans en-tête.
-- **Rappel** : ces données servent seulement à **choisir l'algorithme**. La librairie générée ne contient
-  aucune connaissance, c'est la carte qui apprend sa scène sur place.
 
 ### Étapes dans le Studio
 
-1. **Créer le projet** : nouveau projet de type **Anomaly detection**.
+1. **Créer le projet** : nouveau projet de type **N-Class classification**.
 2. **Paramètres du projet** :
    - Cible : **STM32L476RG** (ou la carte NUCLEO-L476RG).
-   - RAM et flash maximales : garder les valeurs proposées. L'apprentissage embarqué utilise de la RAM, mais
-     la carte a 128 Ko.
+   - RAM et flash maximales : garder les valeurs proposées.
    - Capteur : **Generic** avec **1 axe**, comme la librairie modèle du projet ST. Facultatif : essayer aussi
      **64 axes** et garder le meilleur benchmark. Le firmware accepte les deux, car il vérifie seulement
      qu'il y a 512 valeurs.
-3. **Signaux** (*Import from file*, séparateur virgule) :
-   - *Regular signals* ← `normal.csv`
-   - *Abnormal signals* ← `anomalie.csv`
+3. **Signaux** : importer un fichier par classe (*Import from file*, séparateur virgule) : `normal.csv`,
+   `anomalie.csv`. **Garder le nom de classe `normal`** : le firmware cherche cette classe pour calculer la
+   « proba normal ».
 4. **Benchmark** : le lancer, puis viser une **précision équilibrée** (*balanced accuracy*) d'au moins
-   90 %. En dessous, ajouter des passes plus variées (surtout « normal », pour éviter les fausses alarmes)
-   et relancer.
-5. **Validation** : dans l'émulateur, faire un apprentissage avec des signaux normaux, puis une détection
-   sur les fichiers de **test**. Relever le **nombre minimal d'apprentissages conseillé** affiché par le
-   Studio : s'il dépasse 40, le reporter dans `SENT_LEARN_SIGNALS` (`Inc/app_config.h`). Chaque signal
-   dure environ 0,5 s.
+   90 %. La matrice de confusion montre les erreurs : des signaux normaux classés « anomalie » donneront de
+   fausses alarmes ; ajouter des passes « normal » plus variées et relancer.
+5. **Validation** : dans l'émulateur, importer les fichiers de **test**. Le taux de bonne reconnaissance
+   doit rester proche de celui du benchmark.
 6. **Compilation** : options à choisir pour correspondre au projet CubeIDE (vérifiées dans le `.cproject`) :
    - **Float ABI : hard**
    - **FPU : fpv4-sp-d16**
@@ -220,37 +220,17 @@ version du Studio.
 1. Depuis le `.zip`, remplacer dans `NUCLEO_L476RG_TOF_SENTINELLE/` :
    - `Inc/NanoEdgeAI.h` ;
    - `Src/libneai.a`.
-
-   Il n'y a jamais de `knowledge.h` pour une librairie de détection d'anomalie.
 2. Mettre `APP_MODE` à `1` dans `Inc/app_config.h`.
-3. Recompiler, flasher, installer la carte face à la scène, puis la mettre sous tension (section 6).
-
-### Variante : librairie de classification
-
-Une librairie **N-Class classification** générée avec les deux classes `normal` et `anomalie` (les mêmes
-CSV) est aussi acceptée : le firmware reconnaît le type de librairie à la compilation.
-
-| | Anomaly detection | N-Class classification |
-|---|---|---|
-| Ce que contient la librairie | L'algorithme seul, vierge | Le modèle appris sur vos CSV |
-| Au démarrage | 5 s pour sortir du champ, puis ~21 s d'apprentissage | **Surveillance immédiate** |
-| Valeur affichée | `similarite` à la normale apprise | `proba normal` : probabilité de la classe `normal` |
-| B1, `l`, `a` | Apprendre ou réapprendre | Sans effet |
-| Nouvelle scène ou carte déplacée | B1 long : la carte réapprend | Recollecter et régénérer la librairie |
-
-Dans les deux cas, l'alarme se déclenche sous le seuil (90 %). L'IA dit **s'il y a** une anomalie ; la
-carte des changements, affichée avec l'alarme, montre **où**. Cette carte n'utilise pas l'IA : elle compare
-chaque zone à une moyenne de la scène, mémorisée pendant l'apprentissage (anomalie) ou, sans message,
-pendant la première seconde (classification).
+3. Recompiler, flasher, puis mettre la carte sous tension **à sa place, scène normale** (section 6).
 
 ### Messages d'erreur possibles
 
 | Message | Cause et solution |
 |---|---|
 | `#error La librairie NanoEdge n'attend pas SENT_SIGNAL_LEN valeurs` | La taille du signal déclarée dans le Studio n'est pas 512. Refaire le projet Studio avec 1 axe (ou 64 axes) |
-| `ERREUR : init NanoEdge (pas de classe "normal" dans la librairie) (code -2)` | La librairie est une librairie de **classification** sans classe `normal` (par exemple la librairie modèle de ST). Refaire le projet Studio avec les fichiers `normal.csv` et `anomalie.csv` |
+| `ERREUR : init NanoEdge (pas de classe "normal" dans la librairie) (code -2)` | La classe ne s'appelle pas `normal`, ou c'est encore la librairie modèle de ST. Refaire le projet Studio avec `normal.csv` et `anomalie.csv` |
 | Erreur d'édition de liens « uses VFP register arguments » / float-abi | Recompiler la librairie dans le Studio avec Float ABI **hard** et FPU **fpv4-sp-d16** |
-| Fausses alarmes fréquentes sur la carte | Apprentissage trop court ou scène qui varie (lumière) : appui court sur B1 dans ces conditions, augmenter `SENT_LEARN_SIGNALS`, ou baisser le seuil avec `-` |
+| Fausses alarmes fréquentes sur la carte | Conditions absentes de la collecte (lumière, objet déplacé), ou carte qui a bougé : refaire des passes « normal » dans ces conditions et régénérer, ou baisser le seuil avec `-` |
 
 💡 **Sans matériel**, `cd tests && make synth` génère `normal.csv` et `anomalie.csv` **synthétiques** dans
 `tests/data_synth/`. Ils permettent de vérifier le format, le benchmark, la compilation et l'intégration,
@@ -258,54 +238,78 @@ mais pas d'obtenir un vrai modèle.
 
 ## 6. Utilisation (APP_MODE = 1)
 
-Compiler avec `APP_MODE=1`, flasher, installer la carte, puis la mettre sous tension. Le terminal série
-(**115200 bauds**, comme dans le projet ST) est **facultatif** : la LED et le bouton suffisent.
+Compiler avec `APP_MODE=1`, flasher, puis mettre la carte sous tension à sa place, **scène normale et
+personne devant** : l'image de référence de la carte des changements est prise pendant la première
+seconde. La surveillance commence aussitôt. Le terminal série (**115200 bauds**, comme dans le projet ST)
+est **facultatif** : la LED suffit.
 
 | LED LD2 | État |
 |---|---|
-| Clignote lentement (1 Hz) | Sors du champ : l'apprentissage commence dans 5 s |
-| Allumée fixe | Apprentissage en cours (~21 s), ne touche à rien |
 | Éteinte | Surveillance |
 | Clignote vite | **ALARME** |
 
-| Commande | Action |
+| Commande (terminal) | Action |
 |---|---|
-| **B1 appui long** (> 1,5 s) ou `l` | Tout réapprendre (la connaissance est effacée) |
-| **B1 appui court** ou `a` | Ajouter la situation actuelle comme normale (incrémental) |
 | `+` / `-` | Seuil d'alarme ± 5 % (90 % par défaut) |
-| `v` | Similarité en continu : `similarite  97% [###################-]` |
+| `v` | Probabilité de « normal » en continu : `proba normal  97% [###################-]` |
 | `c` | Afficher la carte des changements maintenant |
 | `h` | Menu |
+| Bouton RESET (noir) | Redémarrer : nouvelle image de référence de la scène |
 
-**Avec une librairie de classification**, la LED reste éteinte dès le démarrage (surveillance) et la ligne
-`v` affiche `proba normal  97% [...]`. B1, `l` et `a` sont sans effet. Une alarme sur une situation
-désormais normale ne se corrige pas sur la carte : il faut recollecter et régénérer la librairie.
+Une alarme sur une situation désormais normale ne se corrige pas sur la carte : le modèle est figé. Il faut
+recollecter dans cette situation (classe « normal ») et régénérer la librairie.
 
-**Idée de démo** : installer la sentinelle devant un stand avec 3 objets. Elle apprend la scène. On retire
-un objet → alarme et `-` à sa place. On le remet → retour à la normale. On ajoute un objet puis on appuie sur
-B1 (court) → il fait désormais partie de la normalité.
+**Idée de démo** : installer la sentinelle devant un stand avec 3 objets, collecter « normal » avec les
+3 objets en place et « anomalie » en retirant, ajoutant ou déplaçant des objets et en passant devant. En
+surveillance : on retire un objet → alarme et `-` à sa place ; on le remet → retour à la normale.
 
 ## 7. Réglages (`NUCLEO_L476RG_TOF_SENTINELLE/Inc/app_config.h`)
 
 | Paramètre | Rôle | Si… |
 |---|---|---|
-| `SENT_THRESHOLD` (90) | Similarité en dessous de laquelle le signal est anormal | Fausses alarmes → diminuer (ou `-`) |
+| `SENT_THRESHOLD` (90) | Proba « normal » en dessous de laquelle le signal est anormal | Fausses alarmes → diminuer (ou `-`) |
 | `SENT_CONFIRM` (3) | Signaux consécutifs pour lever / retirer l'alarme | Alarme trop nerveuse → augmenter |
-| `SENT_LEARN_SIGNALS` (40) | Signaux appris par session (8 trames chacun, ~21 s) | Valeur conseillée par le Studio |
-| `SENT_LEARN_DELAY_MS` (5000) | Délai pour sortir du champ | — |
-| `SENT_MAX_MM` (3000) | Distance d'écrêtage | Grande pièce → 4000 |
+| `SENT_MAX_MM` (3000) | Distance d'écrêtage | Grande pièce → 4000, puis recollecter et régénérer |
 | `SENT_MAP_MIN_MM` / `SENT_MAP_SIGMAS` | Sensibilité de la carte des changements | Carte trop bavarde → augmenter |
+
+`SENT_LEARN_SIGNALS` et `SENT_LEARN_DELAY_MS` ne servent qu'au mode détection d'anomalie (section 9).
 
 ## 8. Limites connues
 
-- **La connaissance est perdue à chaque redémarrage** : la carte réapprend au démarrage, ce qui est voulu
-  ici. La sauvegarder en flash dépend de la version de la librairie NanoEdge et n'est pas implémenté.
+- **Modèle figé** : il ne connaît que la scène et les situations de la collecte. Carte déplacée, scène
+  réaménagée : recollecter et régénérer la librairie.
 - **Orientation de la carte des changements** : selon le sens de montage, la grille peut apparaître en
   miroir par rapport à ce que tu vois. Repère-toi une fois en passant la main d'un côté.
-- **Lumière** : un soleil direct très fort dégrade les mesures du VL53L5CX. Il faut alors apprendre dans les
-  mêmes conditions, ou ajouter des passes « normal » sous différents éclairages.
+- **Lumière** : un soleil direct très fort dégrade les mesures du VL53L5CX. Collecter « normal » sous
+  différents éclairages.
 
-## 9. Tests sur PC
+## 9. Pour aller plus loin : détection d'anomalie avec apprentissage sur la carte
+
+NanoEdge propose aussi des librairies **Anomaly detection**, que le firmware accepte sans modification : il
+reconnaît le type de librairie à la compilation. La logique est alors différente :
+
+- la librairie générée ne contient que l'**algorithme**, vierge ; les CSV `normal` / `anomalie` servent
+  seulement au benchmark, pour le choisir ;
+- c'est la **carte qui apprend sur place** la scène normale : au démarrage, la LED clignote lentement (5 s
+  pour sortir du champ), puis reste allumée ~21 s pendant l'apprentissage ;
+- la valeur affichée est une **similarité** à la normale apprise ;
+- **B1 appui court** (ou `a`) ajoute la situation actuelle à la normale ; **B1 appui long** (ou `l`) efface
+  tout et réapprend, par exemple après avoir déplacé la carte.
+
+| | N-Class classification (ce projet) | Anomaly detection |
+|---|---|---|
+| Ce que contient la librairie | Le modèle appris sur vos CSV | L'algorithme seul, vierge |
+| Au démarrage | **Surveillance immédiate** | 5 s pour sortir du champ, puis ~21 s d'apprentissage |
+| Valeur affichée | `proba normal` | `similarite` à la normale apprise |
+| B1, `l`, `a` | Sans effet | Apprendre ou réapprendre |
+| Carte déplacée | Recollecter et régénérer la librairie | B1 long : la carte réapprend |
+
+Dans le Studio : projet **Anomaly detection**, *Regular signals* ← `normal.csv`, *Abnormal signals* ←
+`anomalie.csv`. À la validation, relever le **nombre minimal d'apprentissages conseillé** : s'il dépasse
+40, le reporter dans `SENT_LEARN_SIGNALS`. Il n'y a pas de `knowledge.h`. Ce mode n'a pas encore été essayé
+sur la carte. La connaissance apprise est perdue à chaque redémarrage.
+
+## 10. Tests sur PC
 
 ```bash
 cd tests
