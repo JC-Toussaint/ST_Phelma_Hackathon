@@ -67,6 +67,12 @@ l'application a été ajoutée (voir `DIFFERENCES_ST.md`). Le brochage, l'I2C, l
 classification sans classe `normal`, s'arrête sur « init NanoEdge ».
 ⚠️ Ne pas régénérer le code depuis le `.ioc` sans précaution (voir `DIFFERENCES_ST.md`, section 5).
 
+> **Deux types de librairie NanoEdge sont acceptés** (détail à la fin de la section 4) :
+> - **Anomaly detection** (le projet est conçu pour elle) : la carte **apprend sur place** sa scène normale ;
+>   les CSV ne servent qu'à choisir l'algorithme.
+> - **N-Class classification** avec les classes `normal` et `anomalie` : le modèle est **appris dans le
+>   Studio** avec vos CSV et figé ; la carte surveille dès le démarrage, sans phase d'apprentissage.
+
 ## 2. Pourquoi collecter des données si l'apprentissage est embarqué ?
 
 Le Studio a besoin d'exemples pour **choisir l'algorithme** (prétraitement et modèle) le mieux adapté à ce
@@ -158,10 +164,19 @@ version du Studio.
 
 ### Variante : librairie de classification
 
-Une librairie **N-Class classification** générée avec les deux classes `normal` et `anomalie` est aussi
-acceptée. Le modèle est alors **figé** : il a été appris dans le Studio. La similarité affichée est la
-probabilité de la classe `normal`, en %, et l'apprentissage sur la carte (B1, `l`, `a`) ne sert plus qu'à la
-carte des changements. Pour que la carte apprenne seule votre scène, préférez **Anomaly detection**.
+Une librairie **N-Class classification** générée avec les deux classes `normal` et `anomalie` (les mêmes
+CSV) est aussi acceptée : le firmware reconnaît le type de librairie à la compilation.
+
+| | Anomaly detection | N-Class classification |
+|---|---|---|
+| Ce que contient la librairie | L'algorithme seul, vierge | Le modèle appris sur vos CSV |
+| Au démarrage | 5 s pour sortir du champ, puis ~21 s d'apprentissage | **Surveillance immédiate** |
+| Valeur affichée | `similarite` à la normale apprise | `proba normal` : probabilité de la classe `normal` |
+| B1, `l`, `a` | Apprendre ou réapprendre | Reprendre l'image de référence de la carte des changements |
+| Nouvelle scène ou carte déplacée | B1 long : la carte réapprend | Recollecter et régénérer la librairie |
+
+Dans les deux cas, l'alarme se déclenche sous le seuil (90 %) et la carte des changements compare la scène à
+une image de référence, prise au démarrage (classification) ou pendant l'apprentissage (anomalie).
 
 ### Messages d'erreur possibles
 
@@ -196,6 +211,12 @@ Compiler avec `APP_MODE=1`, flasher, installer la carte, puis la mettre sous ten
 | `v` | Similarité en continu : `similarite  97% [###################-]` |
 | `c` | Afficher la carte des changements maintenant |
 | `h` | Menu |
+
+**Avec une librairie de classification**, la LED reste éteinte dès le démarrage (surveillance) et la ligne
+`v` affiche `proba normal  97% [...]`. B1 (court ou long), `l` ou `a` annoncent « Image de reference dans
+5 s » : sors du champ, la nouvelle image de la scène est prise pendant 1 s, sans interrompre la
+surveillance. Une alarme sur une situation désormais normale ne se corrige pas sur la carte : il faut
+recollecter et régénérer la librairie.
 
 **Idée de démo** : installer la sentinelle devant un stand avec 3 objets. Elle apprend la scène. On retire
 un objet → alarme et `-` à sa place. On le remet → retour à la normale. On ajoute un objet puis on appuie sur

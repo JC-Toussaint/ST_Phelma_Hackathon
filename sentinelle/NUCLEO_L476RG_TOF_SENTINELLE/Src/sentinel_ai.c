@@ -36,7 +36,7 @@ static float input[SENT_SIGNAL_LEN];
  * Librairie de CLASSIFICATION (projet Studio "N-Class classification" avec les
  * classes normal et anomalie) : le modèle est appris dans le Studio, pas sur la
  * carte. La similarité est la probabilité de la classe "normal", en %.
- * L'apprentissage sur la carte ne sert alors qu'à la carte des changements.
+ * app.c ne lance alors aucune phase d'apprentissage (voir sent_ai_is_trained).
  * ------------------------------------------------------------------------ */
 #include <ctype.h>
 
@@ -83,6 +83,11 @@ uint32_t sent_ai_min_learn(void)
     return 0;
 }
 
+int sent_ai_is_trained(void)
+{
+    return 1;
+}
+
 #else
 /* ------------------------------------------------------------------------
  * Librairie de DÉTECTION D'ANOMALIE (projet Studio "Anomaly detection") :
@@ -113,6 +118,11 @@ uint32_t sent_ai_min_learn(void)
 #else
     return 0;   /* sinon : reporter dans SENT_LEARN_SIGNALS la valeur conseillée par le Studio */
 #endif
+}
+
+int sent_ai_is_trained(void)
+{
+    return 0;
 }
 #endif /* NEAI_NUMBER_OF_CLASSES */
 
