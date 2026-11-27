@@ -13,9 +13,9 @@
  *                 éteinte = surveillance ; clignote vite = ALARME
  *   - "N-Class classification" (classes normal / anomalie, modèle appris dans le
  *     Studio) : surveillance DÈS le démarrage, rien à apprendre ; la similarité est
- *     la probabilité de "normal". Une image de référence de la scène est prise au
- *     démarrage (1 s) pour la carte des changements ; B1, [l] ou [a] la reprennent
- *     après 5 s (le temps de sortir du champ).
+ *     la probabilité de "normal". B1, [l] et [a] sont sans effet. Seule la carte
+ *     des changements (sans IA, qui montre OÙ la scène a changé) a besoin d'une
+ *     image de référence : elle est prise sans message pendant la 1re seconde.
  *
  * Terminal série : port COM virtuel ST-LINK, APP_UART_BAUD (115200) bauds, 8N1.
  */
@@ -103,7 +103,6 @@ static uint32_t    b1_down_at;
 static uint8_t     b1_prev = 1;
 static int         trained;          /* 1 = librairie de classification : modèle figé */
 static uint32_t    ref_left;         /* trames restantes pour l'image de référence */
-static uint32_t    ref_at;           /* instant où la prise de l'image commence */
 
 #ifndef SENT_REF_FRAMES
 #define SENT_REF_FRAMES  15          /* image de référence : ~1 s à 15 Hz */
@@ -142,7 +141,6 @@ static void print_menu(void)
         uart_puts("  SENTINELLE - modele appris dans le Studio\r\n");
         uart_puts("  (classification normal / anomalie)\r\n");
         uart_puts("=====================================\r\n");
-        uart_puts("  [B1] ou [l] ou [a] : reprendre l'image de reference (dans 5 s)\r\n");
     } else {
         uart_puts("  SENTINELLE - apprentissage embarque\r\n");
         uart_puts("=====================================\r\n");
@@ -216,22 +214,6 @@ static void start_learning(int full)
     countdown_shown = -1;
 }
 
-/* Librairie de classification : nouvelle image de référence de la scène, prise
- * dans delay_ms ; la surveillance continue pendant ce temps. */
-static void start_reference(uint32_t delay_ms)
-{
-    scene_ref_reset(&ref);
-    ref_left = SENT_REF_FRAMES;
-    ref_at = HAL_GetTick() + delay_ms;
-    if (delay_ms) {
-        uart_puts("\r\n");
-        put_time();
-        uart_puts("Image de reference dans ");
-        uart_put_int((int32_t)(delay_ms / 1000u));
-        uart_puts(" s : sors du champ du capteur...\r\n");
-    }
-}
-
 static void handle_inputs(void)
 {
     int c = uart_getc_nonblock();
@@ -240,20 +222,14 @@ static void handle_inputs(void)
 
     if (b1_prev && !b1) {
         b1_down_at = now;
-    } else if (!b1_prev && b1) {
-        if (trained) {
-            start_reference(SENT_LEARN_DELAY_MS);
-        } else {
-            start_learning(now - b1_down_at >= SENT_LONG_PRESS_MS);
-        }
+    } else if (!b1_prev && b1 && !trained) {   /* modèle figé : rien à apprendre */
+        start_learning(now - b1_down_at >= SENT_LONG_PRESS_MS);
     }
     b1_prev = b1;
 
     switch (c) {
     case 'l': case 'L': case 'a': case 'A':
-        if (trained) {
-            start_reference(SENT_LEARN_DELAY_MS);
-        } else {
+        if (!trained) {
             start_learning(c == 'l' || c == 'L');
         }
         break;
@@ -344,7 +320,8 @@ void app_init(void)
     if (trained) {
         ai_init_or_die();
         alarm_init(&alarm, threshold, SENT_CONFIRM);
-        start_reference(0);
+        scene_ref_reset(&ref);           /* carte des changements : 1re seconde */
+        ref_left = SENT_REF_FRAMES;
         state = ST_WATCH;
         put_time();
         uart_puts("SURVEILLANCE ACTIVE (modele NanoEdge appris dans le Studio, rien a apprendre).\r\n");
@@ -420,12 +397,9 @@ void app_loop(void)
         break;
 
     case ST_WATCH:
-        if (trained && ref_left && have_frame && (int32_t)(now - ref_at) >= 0) {
+        if (trained && ref_left && have_frame) {
             scene_ref_add(&ref, &frame);
-            if (--ref_left == 0u) {
-                put_time();
-                uart_puts("Image de reference de la scene prise ([c] pour la carte des changements).\r\n");
-            }
+            ref_left--;
         }
         if (have_signal) {
             on_signal_watch();

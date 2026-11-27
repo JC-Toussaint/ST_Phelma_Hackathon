@@ -172,11 +172,13 @@ CSV) est aussi acceptée : le firmware reconnaît le type de librairie à la com
 | Ce que contient la librairie | L'algorithme seul, vierge | Le modèle appris sur vos CSV |
 | Au démarrage | 5 s pour sortir du champ, puis ~21 s d'apprentissage | **Surveillance immédiate** |
 | Valeur affichée | `similarite` à la normale apprise | `proba normal` : probabilité de la classe `normal` |
-| B1, `l`, `a` | Apprendre ou réapprendre | Reprendre l'image de référence de la carte des changements |
+| B1, `l`, `a` | Apprendre ou réapprendre | Sans effet |
 | Nouvelle scène ou carte déplacée | B1 long : la carte réapprend | Recollecter et régénérer la librairie |
 
-Dans les deux cas, l'alarme se déclenche sous le seuil (90 %) et la carte des changements compare la scène à
-une image de référence, prise au démarrage (classification) ou pendant l'apprentissage (anomalie).
+Dans les deux cas, l'alarme se déclenche sous le seuil (90 %). L'IA dit **s'il y a** une anomalie ; la
+carte des changements, affichée avec l'alarme, montre **où**. Cette carte n'utilise pas l'IA : elle compare
+chaque zone à une moyenne de la scène, mémorisée pendant l'apprentissage (anomalie) ou, sans message,
+pendant la première seconde (classification).
 
 ### Messages d'erreur possibles
 
@@ -213,10 +215,8 @@ Compiler avec `APP_MODE=1`, flasher, installer la carte, puis la mettre sous ten
 | `h` | Menu |
 
 **Avec une librairie de classification**, la LED reste éteinte dès le démarrage (surveillance) et la ligne
-`v` affiche `proba normal  97% [...]`. B1 (court ou long), `l` ou `a` annoncent « Image de reference dans
-5 s » : sors du champ, la nouvelle image de la scène est prise pendant 1 s, sans interrompre la
-surveillance. Une alarme sur une situation désormais normale ne se corrige pas sur la carte : il faut
-recollecter et régénérer la librairie.
+`v` affiche `proba normal  97% [...]`. B1, `l` et `a` sont sans effet. Une alarme sur une situation
+désormais normale ne se corrige pas sur la carte : il faut recollecter et régénérer la librairie.
 
 **Idée de démo** : installer la sentinelle devant un stand avec 3 objets. Elle apprend la scène. On retire
 un objet → alarme et `-` à sa place. On le remet → retour à la normale. On ajoute un objet puis on appuie sur
