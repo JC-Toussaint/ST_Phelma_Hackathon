@@ -304,10 +304,63 @@ reconnaît le type de librairie à la compilation. La logique est alors différe
 | B1, `l`, `a` | Sans effet | Apprendre ou réapprendre |
 | Carte déplacée | Recollecter et régénérer la librairie | B1 long : la carte réapprend |
 
-Dans le Studio : projet **Anomaly detection**, *Regular signals* ← `normal.csv`, *Abnormal signals* ←
-`anomalie.csv`. À la validation, relever le **nombre minimal d'apprentissages conseillé** : s'il dépasse
-40, le reporter dans `SENT_LEARN_SIGNALS`. Il n'y a pas de `knowledge.h`. Ce mode n'a pas encore été essayé
-sur la carte. La connaissance apprise est perdue à chaque redémarrage.
+C'est **le même firmware** : `Src/sentinel_ai.c` regarde le `NanoEdgeAI.h` présent. S'il définit des classes
+(`NEAI_NUMBER_OF_CLASSES`), c'est une librairie de classification ; sinon, le firmware appelle les fonctions
+de détection d'anomalie (`neai_anomalydetection_init`, `_learn`, `_detect`). Seule la librairie change.
+
+### Passer en détection d'anomalie
+
+1. **Sauvegarder votre librairie de classification** (`Inc/NanoEdgeAI.h`, `Src/libneai.a`) hors du dépôt,
+   pour pouvoir y revenir.
+2. **Dans NanoEdge AI Studio**, créer un nouveau projet **Anomaly detection** : cible **STM32L476RG**,
+   capteur **Generic, 1 axe**. Les mêmes CSV conviennent :
+   - *Regular signals* ← `normal.csv` ;
+   - *Abnormal signals* ← `anomalie.csv`.
+
+   Ils servent seulement au benchmark, pour choisir l'algorithme : la scène peut être différente de celle
+   qui sera surveillée, tant qu'elle est du même genre.
+3. **Benchmark** : viser une précision équilibrée d'au moins 90 %, comme en classification.
+4. **Validation**, dans l'émulateur : faire un apprentissage avec des signaux normaux, puis une détection
+   sur les fichiers de test. Le Studio indique le **nombre minimal d'apprentissages conseillé** : le nombre
+   de signaux normaux que la librairie doit apprendre avant de détecter correctement (voir ci-dessous).
+5. **Compilation** avec **Float ABI hard** et **FPU fpv4-sp-d16**, puis remplacer `Inc/NanoEdgeAI.h` et
+   `Src/libneai.a` par ceux du `.zip`. Il n'y a pas de `knowledge.h`.
+6. Dans CubeIDE : **Project > Clean**, puis recompiler en `APP_MODE 1` et flasher.
+
+Pour revenir à la classification : remettre la librairie sauvegardée, puis *Clean* et recompiler.
+
+### Le nombre minimal d'apprentissages conseillé
+
+- **Un apprentissage = un signal** de 8 trames, soit ~0,53 s à 15 mesures/s.
+- La carte apprend **`SENT_LEARN_SIGNALS` signaux** (40 par défaut, ~21 s) à chaque démarrage ou appui long
+  sur B1, et autant à chaque appui court.
+- **Si le Studio conseille plus de 40**, mettre cette valeur (ou un peu plus) dans `SENT_LEARN_SIGNALS`
+  (`Inc/app_config.h`). Exemple : 100 apprentissages → ~53 s d'apprentissage au démarrage.
+- Si la librairie fournit ce nombre (`MINIMUM_ITERATION_CALLS_FOR_EFFICIENT_LEARNING` dans `NanoEdgeAI.h`),
+  le firmware le lit et prévient à la fin de l'apprentissage s'il n'est pas atteint :
+  `Attention : NanoEdge conseille au moins N apprentissages ([a] pour completer)`. Un appui court sur B1
+  (ou `a`) ajoute alors `SENT_LEARN_SIGNALS` signaux de plus.
+- Trop peu d'apprentissages donne des **fausses alarmes** ; pendant l'apprentissage, la scène doit rester
+  normale et personne ne doit passer devant.
+
+### Utilisation
+
+| LED LD2 | État |
+|---|---|
+| Clignote lentement (1 Hz) | Sors du champ : l'apprentissage commence dans 5 s |
+| Allumée fixe | Apprentissage en cours, ne touche à rien |
+| Éteinte | Surveillance |
+| Clignote vite | **ALARME** |
+
+Le terminal affiche « SENTINELLE - apprentissage embarque », puis une **similarité** au lieu de « proba
+normal ». Les commandes `+`, `-`, `v`, `c` et `h` sont les mêmes ; B1 et les touches `a` / `l` servent à
+apprendre (tableau plus haut). La connaissance apprise est **perdue à chaque redémarrage** : la carte
+réapprend au démarrage.
+
+⚠️ **Ce mode n'a pas encore été essayé sur la carte**, seulement sur PC avec une librairie simulée. Si une
+version récente du Studio a changé la forme de ces fonctions (un paramètre de plus à
+`neai_anomalydetection_init`, par exemple), la compilation s'arrêtera dans `Src/sentinel_ai.c` : il faudra
+adapter l'appel à ce que déclare le `NanoEdgeAI.h` généré.
 
 ## 10. Tests sur PC
 
