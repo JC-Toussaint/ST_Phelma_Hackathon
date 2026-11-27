@@ -52,6 +52,11 @@ sentinelle/
 
 ## 1. Projet STM32CubeIDE
 
+**Montage** : enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG (connecteurs Arduino), puis brancher le câble
+USB (ST-LINK).
+⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
+sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
+
 Le dossier `NUCLEO_L476RG_TOF_SENTINELLE/` est le projet ST `NUCLEO_L476RG_TOF_VL53L5A1`, auquel
 l'application a été ajoutée (voir `DIFFERENCES_ST.md`). Le brochage, l'I2C, le BSP X-CUBE-TOF1 et l'UART à
 115200 bauds viennent du projet ST : il n'y a rien à configurer.

@@ -79,6 +79,8 @@ Le projet ST d'origine est fourni **zippé** dans `ST-exemple/NUCLEO_L476RG_TOF_
    à l'avance. Lancer NanoEdge AI Studio une fois après l'installation, pour vérifier qu'il démarre.
    Cloner ensuite ce dépôt **sur le disque Windows** (par exemple dans `Documents`).
 1. **Matériel** : enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG, puis brancher le câble USB (ST-LINK).
+   ⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
+   sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
 2. **Firmware** : dans STM32CubeIDE, *File > Import > Existing Projects into Workspace*, puis choisir le
    dossier `NUCLEO_L476RG_TOF_<NOM>/` du projet. Régler le mode dans `Inc/app_config.h`, compiler et
    flasher.

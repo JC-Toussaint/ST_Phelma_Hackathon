@@ -36,6 +36,8 @@ pierre_feuille_ciseaux/
 
 ## 1. Montage
 
+- ⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
+  sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
 - Enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG (connecteurs Arduino).
 - Poser la carte **à plat, capteur vers le plafond**. On joue la main 10–20 cm au-dessus, **paume vers le
   capteur**, doigts bien écartés pour « feuille » et en V bien ouvert pour « ciseaux ».

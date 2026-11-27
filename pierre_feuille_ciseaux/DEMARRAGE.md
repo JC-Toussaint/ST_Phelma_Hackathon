@@ -33,6 +33,8 @@ Il faut prévoir à peu près :
 
 ## 1. Montage (README, section 1)
 
+- ⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
+  sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
 - Enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG.
 - Poser la carte **à plat, capteur vers le plafond**, puis la brancher en USB (ST-LINK).
 - La main se joue **paume vers le capteur, à 10–20 cm au-dessus**. Au-delà de 20 cm, elle est ignorée.
