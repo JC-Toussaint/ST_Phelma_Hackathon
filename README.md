@@ -4,7 +4,7 @@ Deux objets intelligents construits avec un **capteur de distance ToF 8×8** et 
 AI** de STMicroelectronics : sans caméra, sans cloud, tout se calcule dans le microcontrôleur.
 
 **Matériel commun** : carte **NUCLEO-L476RG** (STM32L476, Cortex-M4 80 MHz) + carte d'extension
-**X-NUCLEO-53L5A1** (capteur **VL53L5CX**, 64 zones, 15 mesures/s). Seul le capteur central est utilisé.
+**X-NUCLEO-53L5A1** (capteur **VL53L5CX**, 64 zones, 15 mesures/s).
 
 | Projet | Idée | IA NanoEdge | Outils PC |
 |---|---|---|---|

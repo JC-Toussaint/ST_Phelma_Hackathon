@@ -34,8 +34,7 @@ pierre_feuille_ciseaux/
 
 ## 1. Montage
 
-- Enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG (connecteurs Arduino). Seul le **capteur central** est
-  utilisé : laisser les deux satellites débranchés.
+- Enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG (connecteurs Arduino).
 - Poser la carte **à plat, capteur vers le plafond**. On joue la main 10–20 cm au-dessus, **paume vers le
   capteur**, doigts bien écartés pour « feuille » et en V bien ouvert pour « ciseaux ».
 - La main doit être **entre 4 et 20 cm** au-dessus du capteur ; tout ce qui est au-delà de 20 cm est ignoré
@@ -48,9 +47,8 @@ a été ajoutée (voir `DIFFERENCES_ST.md`). Le brochage, l'I2C, le BSP X-CUBE-T
 viennent donc du projet ST : il n'y a rien à configurer.
 
 1. *File > Import > Existing Projects into Workspace* → sélectionner `NUCLEO_L476RG_TOF_PFC/`.
-2. Choisir le mode avec le symbole `APP_MODE` : `0` = collecte (valeur par défaut), `1` = jeu. On peut le
-   définir dans *Project > Properties > C/C++ Build > Settings > MCU GCC Compiler > Preprocessor*, ou
-   directement dans `Inc/app_config.h`.
+2. Choisir le mode avec le symbole `APP_MODE` : `0` = collecte (valeur par défaut), `1` = jeu, dans
+   `Inc/app_config.h`.
 3. Compiler (Debug ou Release), puis flasher via le ST-LINK.
 
 ⚠️ Ne pas régénérer le code depuis le `.ioc` sans précaution (voir `DIFFERENCES_ST.md`, section 5).
@@ -196,7 +194,7 @@ version du Studio.
    - `Src/libneai.a` ;
    - avec une ancienne version du Studio, ajouter aussi `knowledge.h` dans `Inc/`. `rps_ai.c` gère les deux
      générations d'API.
-2. Mettre `APP_MODE` à `1` dans `Inc/app_config.h`, ou définir le symbole dans les propriétés du projet.
+2. Mettre `APP_MODE` à `1` dans `Inc/app_config.h`.
 3. Recompiler, flasher, puis jouer (section 5).
 
 ### Messages d'erreur possibles

@@ -58,9 +58,8 @@ l'application a été ajoutée (voir `DIFFERENCES_ST.md`). Le brochage, l'I2C, l
 
 1. *File > Import > Existing Projects into Workspace* → sélectionner `NUCLEO_L476RG_TOF_SENTINELLE/`. Il
    peut cohabiter avec `NUCLEO_L476RG_TOF_PFC` dans le même workspace.
-2. Choisir le mode avec le symbole `APP_MODE` : `0` = collecte (valeur par défaut), `1` = sentinelle. On
-   peut le définir dans *Project > Properties > C/C++ Build > Settings > MCU GCC Compiler > Preprocessor*,
-   ou directement dans `Inc/app_config.h`.
+2. Choisir le mode avec le symbole `APP_MODE` : `0` = collecte (valeur par défaut), `1` = sentinelle,
+   dans `Inc/app_config.h`.
 3. Compiler, puis flasher via le ST-LINK.
 
 ⚠️ Le mode `1` demande votre librairie NanoEdge (étape 4) : la librairie modèle fournie par ST, de
@@ -159,7 +158,7 @@ version du Studio.
    - `Src/libneai.a`.
 
    Il n'y a jamais de `knowledge.h` pour une librairie de détection d'anomalie.
-2. Mettre `APP_MODE` à `1` dans `Inc/app_config.h`, ou définir le symbole dans les propriétés du projet.
+2. Mettre `APP_MODE` à `1` dans `Inc/app_config.h`.
 3. Recompiler, flasher, installer la carte face à la scène, puis la mettre sous tension (section 5).
 
 ### Variante : librairie de classification

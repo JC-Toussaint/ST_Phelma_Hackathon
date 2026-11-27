@@ -33,8 +33,7 @@ Il faut prévoir à peu près :
 
 ## 1. Montage (README, section 1)
 
-- Enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG. Seul le **capteur central** est utilisé : laisser les
-  satellites débranchés.
+- Enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG.
 - Poser la carte **à plat, capteur vers le plafond**, puis la brancher en USB (ST-LINK).
 - La main se joue **paume vers le capteur, à 10–20 cm au-dessus**. Au-delà de 20 cm, elle est ignorée.
 
