@@ -263,14 +263,48 @@ recollecter dans cette situation (classe « normal ») et régénérer la librai
 3 objets en place et « anomalie » en retirant, ajoutant ou déplaçant des objets et en passant devant. En
 surveillance : on retire un objet → alarme et `-` à sa place ; on le remet → retour à la normale.
 
-## 7. Réglages (`NUCLEO_L476RG_TOF_SENTINELLE/Inc/app_config.h`)
+## 7. Réglages pour améliorer la réponse (`NUCLEO_L476RG_TOF_SENTINELLE/Inc/app_config.h`)
 
-| Paramètre | Rôle | Si… |
-|---|---|---|
-| `SENT_THRESHOLD` (90) | Proba « normal » en dessous de laquelle le signal est anormal | Fausses alarmes → diminuer (ou `-`) |
-| `SENT_CONFIRM` (3) | Signaux consécutifs pour lever / retirer l'alarme | Alarme trop nerveuse → augmenter |
-| `SENT_MAX_MM` (3000) | Distance d'écrêtage | Grande pièce → 4000, puis recollecter et régénérer |
-| `SENT_MAP_MIN_MM` / `SENT_MAP_SIGMAS` | Sensibilité de la carte des changements | Carte trop bavarde → augmenter |
+Les leviers se rangent en trois familles, selon ce qu'il faut refaire après un changement.
+
+### Réglages de décision : sans recollecter
+
+Ils agissent **après** NanoEdge, sur la façon dont la carte utilise la proba « normal ». Recompiler suffit :
+la librairie reste la même. Ce sont les premiers à essayer.
+
+| Paramètre | Défaut | Rôle | Si… |
+|---|---|---|---|
+| `SENT_THRESHOLD` | 90 | Proba « normal » sous laquelle un signal est anormal ; aussi en direct avec `+` / `-` | Fausses alarmes → diminuer ; anomalies manquées → augmenter |
+| `SENT_CONFIRM` | 3 | Signaux consécutifs (~0,5 s chacun) pour lever ou retirer l'alarme | Alarme trop nerveuse → 4 ou 5 ; trop lente → 2 |
+| `SENT_MAP_MIN_MM` / `SENT_MAP_SIGMAS` | 120 mm / 4 | Sensibilité de la carte des changements (sans IA) | Carte trop bavarde → augmenter |
+
+### Réglages du signal : recollecter et régénérer la librairie
+
+Ils changent les données envoyées à NanoEdge : une librairie entraînée sur l'ancien signal ne marche plus,
+ou mal. Après un changement : recollecter les deux classes, refaire le benchmark, remplacer la librairie.
+
+| Paramètre | Défaut | Rôle | Si… |
+|---|---|---|---|
+| `SENT_MAX_MM` | 3000 mm | Distance d'écrêtage : au-delà, tout est « loin » | Grande pièce → 4000 |
+| `SENT_FRAMES_PER_SIGNAL` | 8 | Trames par signal (512 valeurs) | Réponse plus vive → 4 (256 valeurs : aussi `longueur` dans `tools/profil_collecte.json` et dans le Studio) |
+| `TOF_TARGET_CLOSEST` | 0 | Cible la plus forte par zone (défaut du capteur) ; 1 = la plus proche | Objets fins devant un mur mal vus → essayer 1 |
+
+⚠️ `SENT_MAX_MM`, `SENT_FRAMES_PER_SIGNAL` et `TOF_FREQ_HZ` existent aussi dans
+`X-CUBE-TOF1/App/app_x-cube-tof1.c` (`MAX_THRESHOLD`, `SUCCESSIVE_MATRIX`, `Profile.Frequency`) : les
+modifier **des deux côtés**, sinon un `#error` dit laquelle.
+
+### Les données et le Studio : souvent le levier le plus efficace
+
+- **Collecter sur la scène surveillée**, carte à sa place définitive.
+- **« normal » plus varié** : lumière allumée ou éteinte, autres heures, petites variations acceptables.
+  Tout ce qui manque dans « normal » déclenchera une alarme.
+- **« anomalie » plus variée** : passages, objets ajoutés, retirés ou déplacés, tiroirs, portes.
+- **Classes équilibrées**, et **données de test à part** (`--out test`) pour la validation.
+- **Matrice de confusion** du benchmark : des normaux classés « anomalie » donnent de fausses alarmes, des
+  anomalies classées « normal » des alarmes manquées.
+- **1 axe ou 64 axes** dans le Studio : essayer les deux et garder le meilleur benchmark.
+- **Diagnostic sur la carte** : la touche `v` affiche la proba « normal » en continu ; la regarder sur la
+  scène normale, puis pendant une anomalie, pour choisir `SENT_THRESHOLD`.
 
 `SENT_LEARN_SIGNALS` et `SENT_LEARN_DELAY_MS` ne servent qu'au mode détection d'anomalie (section 9).
 

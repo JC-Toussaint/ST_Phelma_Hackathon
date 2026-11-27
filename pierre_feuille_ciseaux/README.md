@@ -269,20 +269,60 @@ prédiction, la vérification de l'empreinte et le score. La LED reste allumée 
   Score >> Toi 3 - 2 STM32   (egalites : 1)
 ```
 
-## 6. Réglages (`NUCLEO_L476RG_TOF_PFC/Inc/app_config.h`)
+## 6. Réglages pour améliorer la réponse (`NUCLEO_L476RG_TOF_PFC/Inc/app_config.h`)
 
-| Paramètre | Rôle | Si… |
+Les leviers se rangent en trois familles, selon ce qu'il faut refaire après un changement.
+
+### Réglages de décision : sans recollecter
+
+Ils agissent **après** NanoEdge, sur la façon dont le jeu utilise ses réponses. Recompiler suffit : la
+librairie reste la même. Ce sont les premiers à essayer.
+
+| Paramètre | Défaut | Rôle | Si… |
+|---|---|---|---|
+| `GAME_MIN_CONFIDENCE` | 0.60 | Probabilité mini pour qu'une classification compte comme vote | « Je n'ai pas bien vu ta main » fréquent → 0.5 ; mauvais coups reconnus → 0.7 |
+| `GAME_VOTES_NEEDED` | 5 | Classifications concordantes avant de décider | Réponse lente → 3 ; décision instable → 7 |
+| `GAME_CAPTURE_MS` | 2500 | Fenêtre pour montrer son geste après « CHIFOUMI » | Joueurs trop lents (manche annulée) → 3500 |
+| `GAME_EXPLORATION_PCT` | 20 | % de coups aléatoires de l'adversaire adaptatif | Trop prévisible → augmenter |
+
+### Réglages du signal : recollecter et régénérer la librairie
+
+Ils changent les données envoyées à NanoEdge : une librairie entraînée sur l'ancien signal ne marche plus,
+ou mal. Après un changement : recollecter les trois classes, refaire le benchmark, remplacer la librairie.
+
+| Paramètre | Défaut | Rôle | Si… |
+|---|---|---|---|
+| `PRE_NEAR_MM` / `PRE_FAR_MM` | 40 / 200 mm | Plage où la main est vue ; au-delà de `PRE_FAR_MM`, c'est le fond (voir [REGLAGE_DISTANCE.md](REGLAGE_DISTANCE.md)) | Fond détecté comme une main → diminuer `PRE_FAR_MM` |
+| `PRE_DEPTH_WINDOW_MM` | 120 mm | Profondeur gardée derrière le point le plus proche | Avant-bras gênant → diminuer |
+| `PRE_MIN_HAND_ZONES` | 5 | Zones mini pour dire qu'une main est là | Fausses détections → augmenter |
+| `PRE_RECENTER` / `PRE_MAX_SHIFT` | 1 / 2 | Recentrage de la main dans la grille (robustesse à la position) | Positions très variées → `PRE_MAX_SHIFT` 3 |
+| `PRE_FRAMES_PER_SIGNAL` | 8 | Trames par signal (512 valeurs) | Réponse plus vive → 4 (256 valeurs : aussi `longueur` dans `tools/profil_collecte.json` et dans le Studio) |
+| `TOF_TARGET_CLOSEST` | 1 | Cible la plus proche par zone (la main) | Main mal vue au-dessus d'un objet brillant → essayer 0 |
+
+⚠️ `PRE_FRAMES_PER_SIGNAL`, `PRE_NEAR_MM` / `PRE_FAR_MM` et `TOF_FREQ_HZ` existent aussi dans
+`X-CUBE-TOF1/App/app_x-cube-tof1.c` (`SUCCESSIVE_MATRIX`, `MIN_THRESHOLD` / `MAX_THRESHOLD`,
+`Profile.Frequency`) : les modifier **des deux côtés**, sinon un `#error` dit laquelle.
+
+### Les données et le Studio : souvent le levier le plus efficace
+
+- **Plus de passes, plus variées** : autres personnes, autre main, hauteurs, rotations, éclairages.
+- **Classes équilibrées** : des nombres de signaux proches pour pierre, feuille et ciseaux.
+- **Données de test à part** (`--out test`) pour vérifier dans l'émulateur que le modèle généralise.
+- **Matrice de confusion** du benchmark : elle montre quelles classes sont confondues, donc lesquelles
+  compléter (souvent ciseaux / feuille, voir plus bas).
+- **1 axe ou 64 axes** dans le Studio : essayer les deux et garder le meilleur benchmark.
+- **Augmentation** : `tools/augmente_pfc.py` fabrique des variantes plausibles des vrais signaux (rotation,
+  autre main, vitesse) et met une partie des vrais signaux de côté pour vérifier que cela aide (voir
+  [tools/README.md](tools/README.md)).
+- **Diagnostic sur la carte** : la touche `d` affiche en direct la probabilité de chaque classe
+  (section 5) ; deux classes proches l'une de l'autre signalent des données à compléter.
+
+### À ne pas changer
+
+| Paramètre | Défaut | Pourquoi |
 |---|---|---|
-| `PRE_FAR_MM` (200) | Au-delà = fond (avec `MAX_THRESHOLD`, voir [REGLAGE_DISTANCE.md](REGLAGE_DISTANCE.md)) | Fond détecté comme une main → diminuer |
-| `PRE_DEPTH_WINDOW_MM` (120) | Profondeur gardée derrière le point le plus proche | Avant-bras gênant → diminuer |
-| `PRE_MIN_HAND_ZONES` (5) | Seuil de présence de main | Fausses détections → augmenter |
-| `PRE_FRAMES_PER_SIGNAL` (8) | Trames par signal (512 valeurs) | Réponse plus vive → 4, mais il faut refaire la librairie dans Studio |
-| `GAME_VOTES_NEEDED` (5) | Votes avant décision | Réponse lente → 3 |
-| `GAME_MIN_CONFIDENCE` (0.6) | Confiance mini par vote | « Je n'ai pas bien vu ta main » fréquent → 0.5 |
-| `GAME_EXPLORATION_PCT` (20) | % de coups aléatoires de l'IA adaptative | Trop prévisible → augmenter |
-| `TOF_TARGET_CLOSEST` (1) | Cible la plus proche par zone | Main mal vue au-dessus d'un objet brillant → essayer 0 |
-| `APP_UART_BAUD` (115200) | Débit du terminal, fixé : USART2 tel que `main.c` l'initialise | Ne pas changer (`#error` sinon) |
-| `PRE_DATALOG_EVERY` (3) | Collecte : un signal envoyé toutes les N trames | Messages coupés ou trames manquées → 4 |
+| `APP_UART_BAUD` | 115200 | Débit de l'USART2 tel que `main.c` (projet ST) l'initialise (`#error` sinon) |
+| `PRE_DATALOG_EVERY` | 3 | Collecte : un signal toutes les 3 trames, pour ne perdre aucune trame à 115200 bauds. Messages coupés → 4 |
 
 **Réglages du capteur** : ils restent ceux de l'exemple ST, avec ses commentaires, dans
 `X-CUBE-TOF1/App/app_x-cube-tof1.c` (`SUCCESSIVE_MATRIX`, `MATRIX_RESOLUTION`, `MIN_THRESHOLD` /
