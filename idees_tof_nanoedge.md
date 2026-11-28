@@ -129,10 +129,21 @@ les **mouvements** : des signaux temporels, son point fort.
 - Accéléromètre + pression : chocs, chute, retournement pendant un transport.
 - Proche de Sentinelle (4), avec le mouvement au lieu de la scène.
 
+## 🖐️ Interfaces
+
+### 20. La table qui écoute : des boutons sur une table ordinaire (N-classes)
+- Carte collée **sous** une table ; 4 à 6 zones marquées sur le dessus (gommettes). On tape du doigt sur une
+  zone : la carte reconnaît **laquelle**, rien qu'aux vibrations qui traversent le plateau.
+- Démo : un **piano** sur la table (une note par zone, jouée par le PC), ou une télécommande de diaporama.
+- L'onde d'une tape arrive à la carte plus ou moins vite et atténuée, avec des rebonds différents selon
+  l'endroit : impossible à calculer simplement, mais exactement le genre de motif qu'apprend NanoEdge.
+- Plan de développement détaillé plus bas (« Plan détaillé : La table qui écoute »).
+
 ## Recommandation et réutilisation
 
 - **Ventilateur (10)** : le plus sûr pour un hackathon, et la vitrine de l'apprentissage sur la carte.
 - **Baguette magique (13)** : le plus ludique.
+- **La table qui écoute (20)** : le plus surprenant, en reprenant presque tout le projet de la baguette.
 - **Ce qui se réutilise du dépôt** : l'outil de collecte commun `outils/collecte_nanoedge.py`, qui affiche
   déjà des **courbes à plusieurs axes** (`"affichage": {"type": "courbes", ...}` dans le profil, voir
   `outils/README.md`, « Ajouter un projet ») ; la démarche collecte (`APP_MODE 0`) → Studio → intégration
@@ -230,6 +241,97 @@ Pierre-Feuille-Ciseaux. Viser **150 à 300 gestes par classe**, faits par plusie
 - **Gestes trop longs ou trop lents** : ils dépassent la fenêtre de 1,2 s. Montrer le rythme attendu, ou
   allonger la fenêtre (256 échantillons, et revoir `longueur`).
 - **Saturation** : une frappe franche peut dépasser ±4 g ; passer à ±8 g si les courbes plafonnent.
+
+## Plan détaillé : La table qui écoute (20)
+
+La démarche est celle de la baguette (déclenchement, pré-déclenchement, fenêtre fixe, classe `autre`), avec
+deux différences : la carte ne bouge pas, et le signal est **une vibration très brève**, d'où une cadence
+quinze fois plus élevée et une fenêtre très courte.
+
+### 1. Le matériel
+- NUCLEO-L476RG + X-NUCLEO-IKS01A2 ou IKS01A3 ; on n'utilise que l'**accéléromètre** du LSM6DSL / LSM6DSO.
+- La carte est fixée **sous** le plateau, fermement : adhésif double face épais ou petit serre-joint (une
+  carte qui bouge change tout). Le câble USB pend sans toucher la table.
+- 4 zones pour commencer, **espacées d'au moins 15 cm**, marquées par des gommettes numérotées.
+- Une table en bois ou en aggloméré transmet bien ; une table très lourde, ou sur des pieds amortissants,
+  moins bien.
+
+### 2. Concevoir le signal (le point clé)
+
+| Choix | Valeur proposée | Pourquoi |
+|---|---|---|
+| Capteur | accéléromètre seul, 3 axes, ±4 g | Une tape est un choc : le gyroscope n'apporte rien ; ±4 g suffit pour une tape du doigt (passer à ±8 g si les courbes plafonnent) |
+| Fréquence | **1660 Hz** (LSM6DSL), **1667 Hz** (LSM6DSO), fixe | La vibration ne dure que quelques dizaines de millisecondes : à 104 Hz, on ne verrait presque rien |
+| Fenêtre | **256 échantillons ≈ 0,15 s** | Le choc et ses rebonds ; une puissance de 2, comme le conseille ST |
+| Signal | 256 × 3 axes = **768 valeurs**, entrelacées (ax, ay, az, ax…) | Format « Generic, 3 axes » du Studio |
+| Déclenchement | écart à la moyenne récente (la gravité, sur le repos) > seuil, par exemple 80 mg ; 32 échantillons gardés d'avant (~20 ms) | Signaux **alignés sur l'instant de la tape**, comme les gestes de la baguette |
+| Mise à l'échelle | gravité retirée (moyenne d'avant le déclenchement), entiers 0..1000, 500 = zéro | Comme la baguette ; on garde l'amplitude, qui porte aussi l'information de distance |
+
+**Classes** : `zone1` … `zone4`, plus **`autre`** : poser une tasse, un coude, un livre, taper n'importe où
+ailleurs. Seuil de confiance comme `WAND_MIN_CONFIDENCE` dans la baguette.
+
+### 3. Le firmware, à partir du projet de la baguette
+
+Partir de `baguette/NUCLEO_L476RG_IKS01A2_BAGUETTE/` (ou `_IKS01A3_BAGUETTE/`), déjà prêt : collecte,
+NanoEdge, messages sur l'UART. Ce qui change :
+
+| Fichier | Changement |
+|---|---|
+| `app_config.h` | 1660 Hz, accéléromètre seul (3 axes), fenêtre de 256, pré-déclenchement de 32, seuils en mg |
+| `imu_sensor.c` | Accéléromètre seul à 1660 Hz. **Commencer par la lecture actuelle** sur le bit « donnée prête » : pendant une capture, la boucle ne fait rien d'autre. Vérifier qu'aucun échantillon ne manque (256 échantillons doivent durer ~154 ms, à mesurer avec `HAL_GetTick()`). Sinon, passer à la **FIFO** du capteur, lue par paquets : ses fonctions diffèrent entre l'IKS01A2 (`IKS01A2_MOTION_SENSOR_FIFO_…`, décimation) et l'IKS01A3 (`IKS01A3_MOTION_SENSOR_FIFO_…`, BDR et étiquettes) |
+| `tap_preproc.c` | La logique de `wand_preproc.c` avec 3 axes : moyenne de repos, déclenchement, pré-déclenchement, fenêtre ; **code portable, testé sur PC** |
+| `app.c` | Mode 0 : une ligne CSV par tape. Mode 1 : `ZONE 3 95%  (…)`, et la LED |
+
+Le bus I2C des deux projets tourne déjà à 1 MHz (`BUS_I2C1_FREQUENCY`) : environ 10 ko/s à lire, sans
+difficulté. Pendant l'envoi d'une ligne CSV (768 valeurs, ~0,3 s à 115200 bauds), la carte ne capte rien :
+c'est sans gêne, une nouvelle tape arrive rarement si vite.
+
+### 4. La collecte, avec l'outil commun du dépôt
+
+```json
+{
+  "nom": "La table qui écoute",
+  "classes": ["zone1", "zone2", "zone3", "zone4", "autre"],
+  "longueur": 768,
+  "affichage": {"type": "courbes", "axes": ["ax", "ay", "az"], "instants": 256, "ordre": "entrelace"},
+  "valeur_max": 1000,
+  "par_passe": 50,
+  "attente": "En attente"
+}
+```
+
+**Commencer par 2 zones éloignées** : si le benchmark les sépare, ajouter les autres. Viser 100 à 200 tapes
+par zone, avec plusieurs doigts, plusieurs forces, plusieurs personnes, et une passe de test à part
+(`--out test`).
+
+### 5. Le Studio
+- Projet **N-Class classification**, cible STM32L476RG, capteur **Generic, 3 axes**, 256 points par axe.
+- La matrice de confusion montre les zones voisines confondues : les écarter, ou collecter davantage.
+- Compiler avec Float ABI **hard** et FPU **fpv4-sp-d16**, puis intégrer `NanoEdgeAI.h` et `libneai.a`.
+
+### 6. La démo
+- Un petit script PC lit les lignes `ZONE n` sur le port série et joue une note par zone (`winsound.Beep`
+  sous Windows), ou simule une touche du clavier (diapositive suivante, précédente).
+- Extensions : reconnaître la **façon** de taper (doigt, ongle, poing, double tape), ou estimer la **force**
+  de la tape par extrapolation NanoEdge, pour des notes plus ou moins fortes.
+
+### 7. Planning indicatif pour le hackathon
+1. **Matin** : projet de la baguette passé à 1660 Hz, accéléromètre seul ; vérifier la cadence réelle.
+2. Déclenchement sur une tape ; collecte de 2 zones et premier benchmark.
+3. **Midi** : 4 zones + `autre`, benchmark, validation.
+4. **Après-midi** : intégration, reconnaissance en direct, script du piano.
+5. **Bonus** : 6 zones, façon de taper, force.
+
+### Pièges à connaître
+- **Échantillons perdus** : à 1660 Hz, la moindre attente dans la boucle (envoi UART, `HAL_Delay`) fait
+  manquer des échantillons et déforme le signal. Mesurer la durée réelle d'une fenêtre ; passer à la FIFO si
+  besoin.
+- **Le modèle ne vaut que pour cette table et cette position de la carte** : carte décollée ou table
+  déplacée, il faut recollecter. Le présenter comme un « étalonnage ».
+- **Objets posés sur la table** : un ordinateur ou une pile de livres change la propagation des vibrations.
+  Collecter avec la table dans l'état de la démo.
+- **Tapes trop douces** : sous le seuil, rien ne se passe ; trop fortes, les courbes plafonnent. Montrer la
+  tape attendue.
 
 # Autre carte d'extension : un microphone (X-NUCLEO-CCA02M2)
 
