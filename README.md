@@ -40,7 +40,7 @@ NanoEdge AI Studio sur des exemples des deux classes :
 
 ```
 .
-├── ST-exemple/                 projet de référence de ST (zip) et son README pour le hackathon
+├── ST-exemple/                 projets de référence (zip : capteur ToF, IKS01A2, IKS01A3) et README de ST
 ├── pierre_feuille_ciseaux/     ┐  un dossier par projet, chacun avec :
 ├── sentinelle/                 ┘    NUCLEO_L476RG_TOF_<NOM>/  projet STM32CubeIDE complet
 │                                    tools/                    outils PC en Python (tkinter)
@@ -67,6 +67,10 @@ Le projet ST d'origine est fourni **zippé** dans `ST-exemple/NUCLEO_L476RG_TOF_
 `.gitignore`). Ce README parle du projet « NUCLEO_F401RE_TOF_VL53L5A1 » et renvoie à des images absentes
 (`img/`) : le projet fourni est bien celui de la NUCLEO-L476RG. Ses réglages sont **actifs** dans
 `app_x-cube-tof1.c` (avec `NEAI_MODE 1`), alors que le README les montre avec `NEAI_MODE 0`.
+
+Pour un projet avec un accéléromètre, `ST-exemple/` contient aussi l'application **DataLogTerminal** du pack
+X-CUBE-MEMS1, générée pour la NUCLEO-L476RG : `NUCLEO_L476RG_IKS01A2.zip` (X-NUCLEO-IKS01A2, pack 9.6.0) et
+`NUCLEO_L476RG_IKS01A3.zip` (X-NUCLEO-IKS01A3, pack 11.2.0). Voir `idees_tof_nanoedge.md`.
 
 ## Démarrage rapide
 

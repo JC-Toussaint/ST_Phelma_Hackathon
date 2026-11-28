@@ -175,7 +175,8 @@ Pierre-Feuille-Ciseaux, elle évite de reconnaître un geste à chaque mouvement
 
 ### 3. Le firmware, sur le modèle de Pierre-Feuille-Ciseaux
 
-Partir de l'application **DataLogTerminal** du pack X-CUBE-MEMS1 (9.6.0 pour l'IKS01A2, 11.2.0 pour
+Partir de l'application **DataLogTerminal** (déjà générée et zippée dans `ST-exemple/NUCLEO_L476RG_IKS01A2.zip`
+et `NUCLEO_L476RG_IKS01A3.zip`) du pack X-CUBE-MEMS1 (9.6.0 pour l'IKS01A2, 11.2.0 pour
 l'IKS01A3), générée par STM32CubeIDE pour la NUCLEO-L476RG (comme Pierre-Feuille-Ciseaux part de
 `ST-exemple/`), puis ajouter des fichiers sans modifier ceux de ST :
 

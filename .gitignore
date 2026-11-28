@@ -1,5 +1,7 @@
 # Projet ST d'origine décompressé (il est fourni zippé dans ST-exemple/)
 /NUCLEO_L476RG_TOF_VL53L5A1/
+/NUCLEO_L476RG_IKS01A3/
+/NUCLEO_L476RG_IKS01A2/
 
 # Artefacts de build STM32CubeIDE
 Debug/
