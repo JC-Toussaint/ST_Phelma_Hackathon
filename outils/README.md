@@ -137,6 +137,7 @@ suive ; reporter ensuite le résultat dans le profil.
    pour garder une commande courte.
 
 **État** : utilisé par Pierre-Feuille-Ciseaux (`rps_logger.py`, `rps_logger_gui.py`), la Sentinelle
-(`sentinel_logger.py`, `sentinel_logger_gui.py`) et la Baguette magique (`wand_logger.py`,
-`wand_logger_gui.py`, affichage en courbes), dont les scripts sont des lanceurs de cet outil. Un nouveau
+(`sentinel_logger.py`, `sentinel_logger_gui.py`), la Baguette magique (`wand_logger.py`,
+`wand_logger_gui.py`, affichage en courbes) et la Table qui écoute (`table_logger.py`, `table_logger_gui.py`),
+dont les scripts sont des lanceurs de cet outil. Un nouveau
 projet n'a besoin que de son profil.

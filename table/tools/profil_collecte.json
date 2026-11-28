@@ -1,0 +1,20 @@
+{
+  "nom": "La table qui écoute",
+  "classes": ["zone1", "zone2", "zone3", "zone4", "autre"],
+  "longueur": 768,
+  "affichage": {"type": "courbes", "axes": ["ax", "ay", "az"], "instants": 256, "ordre": "entrelace"},
+  "valeur_max": 1000,
+  "par_passe": 50,
+  "bauds": 115200,
+  "dossier": ".",
+  "attente": "En attente",
+  "conseil": {
+    "zone1": "une tape franche du bout du doigt au centre de la gommette 1, puis attendre que la LED change ; varier le doigt et la force, jamais la zone.",
+    "zone2": "une tape franche au centre de la gommette 2 ; commencer par 2 zones éloignées (1 et 2), puis ajouter les autres.",
+    "zone3": "une tape franche au centre de la gommette 3.",
+    "zone4": "une tape franche au centre de la gommette 4.",
+    "autre": "tout ce qui ne doit PAS jouer de note : poser une tasse ou un livre, un coude, taper hors des gommettes, frotter la table."
+  },
+  "import": "projet N-Class classification, capteur Generic avec 3 axes (256 points par axe) : un fichier par classe, en gardant les noms des fichiers.",
+  "demo_signaux_par_s": 1
+}

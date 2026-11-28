@@ -131,7 +131,7 @@ les **mouvements** : des signaux temporels, son point fort.
 
 ## 🖐️ Interfaces
 
-### 20. La table qui écoute : des boutons sur une table ordinaire (N-classes)
+### 20. La table qui écoute : des boutons sur une table ordinaire (N-classes) ✅ (réalisée : voir `table/`)
 - Carte collée **sous** une table ; 4 à 6 zones marquées sur le dessus (gommettes). On tape du doigt sur une
   zone : la carte reconnaît **laquelle**, rien qu'aux vibrations qui traversent le plateau.
 - Démo : un **piano** sur la table (une note par zone, jouée par le PC), ou une télécommande de diaporama.

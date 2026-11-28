@@ -301,10 +301,11 @@ def gui_tests():
             q.put(("line", ",".join(map(str, sig)) + "\n"))
         while app.files.current[3] < 2:
             app.update()
-        app.focus_set()
-        app.event_generate("<BackSpace>", when="tail")
+        # La touche est liée à remove_last ; on appelle la fonction (simuler la touche dépend du focus de la fenêtre).
+        bound = "<Key-BackSpace>" in app.bind() or "<BackSpace>" in app.bind()
+        app.remove_last()
         app.update()
-        check(app.state == "recording" and app.files.current[3] == 1, f"{name} : Retour arrière pendant la passe")
+        check(bound and app.state == "recording" and app.files.current[3] == 1, f"{name} : Retour arrière pendant la passe")
         app.stop_record()
         app.undo_last()
         if data is DIST:
