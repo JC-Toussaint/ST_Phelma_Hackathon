@@ -1,0 +1,20 @@
+{
+  "nom": "Baguette magique",
+  "classes": ["cercle", "zigzag", "frappe", "v", "autre"],
+  "longueur": 1536,
+  "affichage": {"type": "courbes", "axes": ["ax", "ay", "az", "gx", "gy", "gz"], "instants": 256, "ordre": "entrelace"},
+  "valeur_max": 1000,
+  "par_passe": 50,
+  "bauds": 115200,
+  "dossier": ".",
+  "attente": "En attente",
+  "conseil": {
+    "cercle": "un cercle devant toi, dans le sens des aiguilles d'une montre, en partant du haut (~1 s) ; varie la taille et la vitesse, jamais le sens.",
+    "zigzag": "la lettre Z devant toi : trait vers la droite, diagonale vers le bas à gauche, trait vers la droite, sans pause.",
+    "frappe": "un coup sec vers le bas, comme un coup de baguette, avec un arrêt net DANS L'AIR. Ne jamais toucher la table ni aucun objet.",
+    "v": "la lettre V devant toi : diagonale vers le bas à droite, puis vers le haut à droite, sans pause.",
+    "autre": "mouvements quelconques qui ne doivent PAS être reconnus : se gratter la tête, poser ou reprendre la baguette, gestes hésitants."
+  },
+  "import": "projet N-Class classification, capteur Generic avec 6 axes (256 points par axe) : un fichier par classe, en gardant les noms des fichiers.",
+  "demo_signaux_par_s": 1
+}

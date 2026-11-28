@@ -109,7 +109,7 @@ les **mouvements** : des signaux temporels, son point fort.
 
 ## 🎮 Mouvement et gestes
 
-### 13. Baguette magique (N-classes)
+### 13. Baguette magique (N-classes) ✅ (réalisée : voir `baguette/`)
 - Carte tenue en main ; accéléro + gyro 6 axes, ~100 Hz, fenêtres d'~1 s.
 - Classes : cercle / zigzag / frappe / « V »… pour piloter un jeu ou une présentation.
 - Ludique, et proche de Pierre-Feuille-Ciseaux dans la démarche.

@@ -1,0 +1,5 @@
+# Librairies et archives : jamais de conversion des fins de ligne (core.autocrlf sous Windows).
+*.a    binary
+*.zip  binary
+*.pptx binary
+*.png  binary

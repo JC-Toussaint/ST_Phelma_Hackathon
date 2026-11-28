@@ -90,7 +90,7 @@ Exemple : le profil de Pierre-Feuille-Ciseaux (`pierre_feuille_ciseaux/tools/pro
 | `affichage` | Pour | Signal attendu |
 |---|---|---|
 | `{"type": "grille", "taille": 8, "trames": 8, "min": 20, "miroir_gauche_droite": true}` | capteur matriciel (ToF 8×8) | `trames` × `taille`² valeurs, trame après trame. `min` : plus petite valeur d'une zone active (0 = fond). `miroir_gauche_droite` / `miroir_haut_bas` : retournent l'**affichage** seulement (voir ci-dessous) |
-| `{"type": "courbes", "axes": ["x", "y", "d", "s"], "instants": 32, "ordre": "entrelace"}` | grandeurs suivies dans le temps (trajectoire d'une main, accéléromètre…) | `instants` × nombre d'axes ; `entrelace` = x0,y0,d0,s0,x1… ; `par_axe` = x0…x31,y0… |
+| `{"type": "courbes", "axes": ["x", "y", "d", "s"], "instants": 32, "ordre": "entrelace"}` | grandeurs suivies dans le temps (trajectoire d'une main, accéléromètre de la baguette…) | `instants` × nombre d'axes ; `entrelace` = x0,y0,d0,s0,x1… ; `par_axe` = x0…x31,y0… |
 | `{"type": "brut"}` | tout le reste | une courbe des valeurs |
 
 **Options de la grille :**
@@ -136,6 +136,7 @@ suive ; reporter ensuite le résultat dans le profil.
 3. Facultatif : un lanceur de trois lignes dans le projet, comme `pierre_feuille_ciseaux/tools/rps_logger_gui.py`,
    pour garder une commande courte.
 
-**État** : utilisé par Pierre-Feuille-Ciseaux (`rps_logger.py`, `rps_logger_gui.py`) et la Sentinelle
-(`sentinel_logger.py`, `sentinel_logger_gui.py`), dont les scripts sont des lanceurs de cet outil. Un
-nouveau projet n'a besoin que de son profil.
+**État** : utilisé par Pierre-Feuille-Ciseaux (`rps_logger.py`, `rps_logger_gui.py`), la Sentinelle
+(`sentinel_logger.py`, `sentinel_logger_gui.py`) et la Baguette magique (`wand_logger.py`,
+`wand_logger_gui.py`, affichage en courbes), dont les scripts sont des lanceurs de cet outil. Un nouveau
+projet n'a besoin que de son profil.

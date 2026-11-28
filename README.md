@@ -1,23 +1,27 @@
-# Hackathon ST × Phelma 2026 — ToF multizone + NanoEdge AI
+# Hackathon ST × Phelma 2026 — ToF multizone, accéléromètre + NanoEdge AI
 
-Deux objets intelligents construits avec un **capteur de distance ToF 8×8** et l'**IA embarquée NanoEdge
-AI** de STMicroelectronics : sans caméra, sans cloud, tout se calcule dans le microcontrôleur.
+Trois objets intelligents construits avec l'**IA embarquée NanoEdge AI** de STMicroelectronics : deux avec
+un **capteur de distance ToF 8×8**, un avec un **accéléromètre + gyroscope**. Sans caméra, sans cloud, tout
+se calcule dans le microcontrôleur.
 
-**Matériel commun** : carte **NUCLEO-L476RG** (STM32L476, Cortex-M4 80 MHz) + carte d'extension
-**X-NUCLEO-53L5A1** (capteur **VL53L5CX**, 64 zones, 15 mesures/s).
+**Matériel** : carte **NUCLEO-L476RG** (STM32L476, Cortex-M4 80 MHz) + une carte d'extension :
+**X-NUCLEO-53L5A1** (capteur ToF **VL53L5CX**, 64 zones, 15 mesures/s) pour Pierre-Feuille-Ciseaux et la
+Sentinelle, **X-NUCLEO-IKS01A2** (accéléromètre + gyroscope **LSM6DSL**) pour la Baguette magique.
 
 | Projet | Idée | IA NanoEdge | Outils PC |
 |---|---|---|---|
 | [**Pierre-Feuille-Ciseaux**](pierre_feuille_ciseaux/README.md) | Jouer contre le STM32 avec la main au-dessus du capteur | Classification (pierre, feuille, ciseaux) | Collecte (graphique et ligne de commande), augmentation des données |
 | [**Sentinelle**](sentinelle/README.md) | Surveiller une scène et signaler tout ce qui n'est pas « normal », en montrant où la scène a changé | Classification (normal, anomalie) | Collecte (graphique et ligne de commande) |
+| [**Baguette magique**](baguette/README.md) | Reconnaître des gestes dans l'air avec la carte tenue comme une baguette | Classification (cercle, zigzag, frappe, V, autre), librairie d'essai fournie | Collecte (graphique et ligne de commande), augmentation des données |
 
-Les deux projets partent de l'exemple fourni par ST pour le hackathon ([`ST-exemple/`](ST-exemple/README.md)).
+Les projets partent des exemples de ST ([`ST-exemple/`](ST-exemple/README.md)) : le projet ToF fourni pour
+le hackathon, et l'application DataLogTerminal de X-CUBE-MEMS1 pour la baguette.
 La fiche [`idees_tof_nanoedge.md`](idees_tof_nanoedge.md) rassemble d'autres idées de projets avec ce
 capteur, et avec les cartes accéléromètre X-NUCLEO-IKS01A2 ou IKS01A3.
 
 ---
 
-## Les deux projets en bref
+## Les trois projets en bref
 
 ### ✊✋✌️ Pierre-Feuille-Ciseaux
 Le capteur, posé à plat, regarde la main. Le STM32 reconnaît le geste et joue sa propre main :
@@ -34,6 +38,15 @@ NanoEdge AI Studio sur des exemples des deux classes :
 - elle surveille **seule, dès la mise sous tension**, sans PC ;
 - **pas à pas** pour une première fois : [`sentinelle/DEMARRAGE.md`](sentinelle/DEMARRAGE.md).
 
+### 🪄 Baguette magique
+La carte, tenue en main, devient une baguette : le STM32 reconnaît un **cercle**, un **Z**, une **frappe**
+ou un **V** tracés dans l'air, à partir de 6 courbes (accélération et rotation sur 3 axes) :
+- des **signaux dans le temps**, le point fort de NanoEdge, alignés sur le début du geste ;
+- une classe **autre** pour que les mouvements quelconques ne soient pas pris pour des gestes ;
+- une **librairie d'essai fournie** (10 gestes par classe) pour essayer tout de suite, avant de collecter
+  les vôtres ;
+- **pas à pas** pour une première fois : [`baguette/DEMARRAGE.md`](baguette/DEMARRAGE.md).
+
 ---
 
 ## Organisation du dépôt
@@ -42,7 +55,8 @@ NanoEdge AI Studio sur des exemples des deux classes :
 .
 ├── ST-exemple/                 projets de référence (zip : capteur ToF, IKS01A2, IKS01A3) et README de ST
 ├── pierre_feuille_ciseaux/     ┐  un dossier par projet, chacun avec :
-├── sentinelle/                 ┘    NUCLEO_L476RG_TOF_<NOM>/  projet STM32CubeIDE complet
+├── sentinelle/                 │    NUCLEO_L476RG_TOF_<NOM>/  projet STM32CubeIDE complet
+├── baguette/                   ┘      (NUCLEO_L476RG_IKS01A2_BAGUETTE/ pour la baguette)
 │                                    tools/                    outils PC en Python (tkinter)
 │                                    tests/                    tests sur PC (make test)
 │                                    README.md                 guide complet du projet
@@ -53,8 +67,9 @@ NanoEdge AI Studio sur des exemples des deux classes :
 └── idees_tof_nanoedge.md       idées de projets avec ce capteur, et avec un accéléromètre (IKS01A2 / IKS01A3)
 ```
 
-**Base commune** : chaque projet CubeIDE est une **copie du projet fourni par ST**
-`NUCLEO_L476RG_TOF_VL53L5A1`, renommée pour que les deux puissent cohabiter dans le même workspace.
+**Base commune** : chaque projet ToF est une **copie du projet fourni par ST**
+`NUCLEO_L476RG_TOF_VL53L5A1`, renommée pour que les projets puissent cohabiter dans le même workspace (la
+baguette part de même de `NUCLEO_L476RG_IKS01A2.zip` : voir son `DIFFERENCES_ST.md`).
 - **Aucun fichier `Src/` ou `Inc/` de ST n'est modifié** : l'application est ajoutée dans de nouveaux
   fichiers.
 - **Seul `X-CUBE-TOF1/App/app_x-cube-tof1.c` change vraiment** : il appelle `app_init()` et `app_loop()` à
@@ -69,8 +84,9 @@ Le projet ST d'origine est fourni **zippé** dans `ST-exemple/NUCLEO_L476RG_TOF_
 `app_x-cube-tof1.c` (avec `NEAI_MODE 1`), alors que le README les montre avec `NEAI_MODE 0`.
 
 Pour un projet avec un accéléromètre, `ST-exemple/` contient aussi l'application **DataLogTerminal** du pack
-X-CUBE-MEMS1, générée pour la NUCLEO-L476RG : `NUCLEO_L476RG_IKS01A2.zip` (X-NUCLEO-IKS01A2, pack 9.6.0) et
-`NUCLEO_L476RG_IKS01A3.zip` (X-NUCLEO-IKS01A3, pack 11.2.0). Voir `idees_tof_nanoedge.md`.
+X-CUBE-MEMS1, générée pour la NUCLEO-L476RG : `NUCLEO_L476RG_IKS01A2.zip` (X-NUCLEO-IKS01A2, pack 9.6.0,
+base de la baguette) et `NUCLEO_L476RG_IKS01A3.zip` (X-NUCLEO-IKS01A3, pack 11.2.0). Voir
+`idees_tof_nanoedge.md`.
 
 ## Démarrage rapide
 
@@ -84,12 +100,13 @@ X-CUBE-MEMS1, générée pour la NUCLEO-L476RG : `NUCLEO_L476RG_IKS01A2.zip` (X-
    Les deux logiciels de ST se téléchargent sur st.com, en général avec un compte myST gratuit : le créer
    à l'avance. Lancer NanoEdge AI Studio une fois après l'installation, pour vérifier qu'il démarre.
    Cloner ensuite ce dépôt **sur le disque Windows** (par exemple dans `Documents`).
-1. **Matériel** : enficher la X-NUCLEO-53L5A1 sur la NUCLEO-L476RG, puis brancher le câble USB (ST-LINK).
+1. **Matériel** : enficher la carte d'extension du projet (X-NUCLEO-53L5A1, ou X-NUCLEO-IKS01A2 pour la
+   baguette) sur la NUCLEO-L476RG, puis brancher le câble USB (ST-LINK).
    ⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
    sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
 2. **Firmware** : dans STM32CubeIDE, *File > Import > Existing Projects into Workspace*, puis choisir le
-   dossier `NUCLEO_L476RG_TOF_<NOM>/` du projet. Régler le mode dans `Inc/app_config.h`, compiler et
-   flasher.
+   dossier `NUCLEO_L476RG_<…>/` du projet. Régler le mode dans `app_config.h` (`Inc/`, ou `Core/Inc/` pour
+   la baguette), compiler et flasher.
 
    > 📄 **Lire [`CUBEIDE_IMPORT.md`](CUBEIDE_IMPORT.md)** avant le premier import : le seul menu à utiliser,
    > un workspace par dépôt, et la correction de chaque erreur d'import.
@@ -109,25 +126,28 @@ X-CUBE-MEMS1, générée pour la NUCLEO-L476RG : `NUCLEO_L476RG_IKS01A2.zip` (X-
    ```bash
    python pierre_feuille_ciseaux/tools/rps_logger_gui.py --demo
    python sentinelle/tools/sentinel_logger_gui.py --demo
+   python baguette/tools/wand_logger_gui.py --demo
    ```
 
 | Projet | Mode par défaut (`APP_MODE`) | Autre mode | Débit série |
 |---|---|---|---|
 | Pierre-Feuille-Ciseaux | `0` collecte | `1` jeu (librairie NanoEdge) | 115200 bauds |
 | Sentinelle | `0` collecte | `1` sentinelle (librairie NanoEdge) | 115200 bauds |
+| Baguette magique | `0` collecte | `1` reconnaissance (librairie d'essai fournie, ou la vôtre) | 115200 bauds |
 
-## Démarche NanoEdge AI (commune aux deux projets)
+## Démarche NanoEdge AI (commune aux trois projets)
 
 1. **Collecter** des exemples avec le firmware en mode `0` et l'outil graphique du projet : un fichier CSV
-   par classe, enregistré à côté du script. L'outil est commun aux deux projets
+   par classe, enregistré à côté du script. L'outil est commun aux trois projets
    ([`outils/`](outils/README.md)) ; chaque projet le décrit par un profil JSON.
 2. **Générer la librairie** dans **NanoEdge AI Studio**, le logiciel gratuit de ST :
    - type de projet : *N-Class classification* ;
    - cible : STM32L476RG ;
    - lancer le benchmark, puis compiler avec **Float ABI hard** et **FPU fpv4-sp-d16**.
-3. **Intégrer** : remplacer `Inc/NanoEdgeAI.h` et `Src/libneai.a` dans le projet CubeIDE, puis passer en
-   mode NanoEdge. Le dépôt contient la librairie modèle de ST : tant qu'elle n'est pas remplacée par la
-   vôtre, le mode NanoEdge s'arrête sur « init NanoEdge ».
+3. **Intégrer** : remplacer `NanoEdgeAI.h` et `libneai.a` dans le projet CubeIDE, puis passer en mode
+   NanoEdge. Pour les deux projets ToF, le dépôt contient la librairie modèle de ST : tant qu'elle n'est pas
+   remplacée par la vôtre, le mode NanoEdge s'arrête sur « init NanoEdge ». La baguette est fournie avec une
+   librairie d'essai qui fonctionne (10 gestes par classe), à remplacer par celle de vos propres gestes.
 
 Les étapes détaillées, les noms de classes à respecter et les messages d'erreur possibles figurent dans la
 section « Générer la librairie NanoEdge AI » de chaque README. `cd <projet>/tests && make synth` génère des
@@ -143,9 +163,10 @@ cd <projet>/tests && make test
 ```
 
 > Les firmwares ont été compilés sur PC avec les en-têtes réels du projet ST, et les outils PC ont été
-> testés en mode démo. Les deux projets ont été essayés sur la carte : Pierre-Feuille-Ciseaux (collecte,
+> testés en mode démo. Les trois projets ont été essayés sur la carte : Pierre-Feuille-Ciseaux (collecte,
 > jeu, probabilités en direct) et la Sentinelle (collecte, surveillance avec une librairie de classification
-> `normal` / `anomalie`). La variante Anomaly detection de la Sentinelle (apprentissage sur la carte,
+> `normal` / `anomalie`), et la Baguette magique (collecte, reconnaissance avec la librairie d'essai). La
+> variante Anomaly detection de la Sentinelle (apprentissage sur la carte,
 > « Pour aller plus loin ») reste à valider sur la carte.
 
 ## À savoir
