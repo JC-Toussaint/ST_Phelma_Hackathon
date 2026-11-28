@@ -330,7 +330,7 @@ make synth    # CSV synthétiques des 5 classes pour essayer NanoEdge AI Studio
 - **Orientation** : la baguette doit être tenue toujours dans le même sens (repère « haut / avant »).
 - **Câble USB** : il limite l'amplitude des gestes ; une version sans fil demanderait une batterie et une
   liaison radio.
-- **Carte X-NUCLEO-IKS01A3** : projet `NUCLEO_L476RG_IKS01A3_BAGUETTE/`, compilé (modes collecte et
-  reconnaissance) mais **pas encore essayé sur la carte**. La librairie fournie y est la même, apprise avec
+- **Carte X-NUCLEO-IKS01A3** : projet `NUCLEO_L476RG_IKS01A3_BAGUETTE/`, compilé dans les deux modes ; la
+  **collecte a été essayée sur la carte** (les 6 courbes réagissent), la reconnaissance pas encore. La librairie fournie y est la même, apprise avec
   le LSM6DSL de l'IKS01A2 : les axes du LSM6DSO peuvent être orientés autrement sur la carte. Avec une
   IKS01A3, collecter vos propres gestes et générer votre librairie avant de juger la reconnaissance.

@@ -113,6 +113,7 @@ variantes dans `tools/augmente/` (README, « Augmenter les données »), sans re
 | Situation | Que faire |
 |---|---|
 | L'outil de collecte ne peut pas ouvrir le port COM | Le terminal série ou la console de CubeIDE le garde : les fermer. Un seul programme à la fois sur le port |
+| L'import refuse le projet (grisé, « already exists in the workspace ») | Un projet du même nom est déjà dans le workspace (copie précédente, ancien import) : le fermer, puis *Delete* sans effacer les fichiers, et réimporter. Voir [`CUBEIDE_IMPORT.md`](../CUBEIDE_IMPORT.md) |
 | CubeIDE affiche « Default », « make not found » ou « Not able to get mcu target » | Le projet a été mal importé : suivre [`CUBEIDE_IMPORT.md`](../CUBEIDE_IMPORT.md) |
 | `ERREUR : init LSM6DSL` (ou `LSM6DSO`) au démarrage | La carte d'extension est mal enfoncée (les secousses la font sortir) : la renfoncer. Ou le projet ne correspond pas à la carte : IKS01A2 et IKS01A3 ont chacune le leur |
 | Rien ne s'affiche quand on fait un geste | Immobiliser la baguette un instant avant le geste (en reconnaissance : attendre que la LED s'allume), puis faire un geste plus franc |

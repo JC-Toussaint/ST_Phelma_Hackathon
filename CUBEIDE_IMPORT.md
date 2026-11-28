@@ -66,7 +66,9 @@ depuis `\\wsl.localhost`.
 
 ### L'import refuse le projet, ou n'en importe qu'une partie
 
-**Cause** : un projet du même nom est déjà dans le workspace, souvent celui d'une autre copie du dépôt.
+**Cause** : un projet du même nom est déjà dans le workspace, souvent celui d'une autre copie du dépôt, ou
+une copie précédente du même projet (dossier copié à la main puis remplacé, ancien import). Dans la fenêtre
+d'import, le projet apparaît alors grisé, avec « already exists in the workspace ».
 L'import échoue alors en silence, ou retombe sur un import générique qui casse le projet.
 
 **Correction** : utiliser un workspace propre à ce dépôt, ou fermer puis supprimer (*Delete*, sans effacer
