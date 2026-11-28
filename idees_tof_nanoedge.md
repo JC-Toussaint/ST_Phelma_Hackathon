@@ -1,4 +1,4 @@
-# Idées de projets NanoEdge AI + STM32L476 : capteur ToF VL53L5CX (8×8), puis accéléromètre (IKS01A2 / IKS01A3)
+# Idées de projets NanoEdge AI + STM32L476 : capteur ToF VL53L5CX (8×8), accéléromètre (IKS01A2 / IKS01A3), microphone
 
 Matériel : NUCLEO-L476RG + X-NUCLEO-53L5A1 (capteur ToF multizone VL53L5CX, 8×8 zones, ~45° de champ, 15 Hz max en 8×8).
 
@@ -230,3 +230,142 @@ Pierre-Feuille-Ciseaux. Viser **150 à 300 gestes par classe**, faits par plusie
 - **Gestes trop longs ou trop lents** : ils dépassent la fenêtre de 1,2 s. Montrer le rythme attendu, ou
   allonger la fenêtre (256 échantillons, et revoir `longueur`).
 - **Saturation** : une frappe franche peut dépasser ±4 g ; passer à ±8 g si les courbes plafonnent.
+
+# Autre carte d'extension : un microphone (X-NUCLEO-CCA02M2)
+
+Matériel : NUCLEO-L476RG + une carte de microphones MEMS numériques. Ni l'IKS01A2 ni l'IKS01A3 n'ont de
+microphone.
+
+| Carte | Microphone | Avec la NUCLEO-L476RG |
+|---|---|---|
+| **X-NUCLEO-CCA02M2** (recommandée) | 2 × **MP34DT06J** (numériques, sortie PDM), jusqu'à 4 | **Prise en charge par ST** : pack **X-CUBE-MEMSMIC1**, exemple *Microphones_Streaming* ; le L476 lit les micros avec son périphérique **DFSDM** |
+| X-NUCLEO-IKS02A1 | **IMP34DT05** (numérique, PDM), avec un accéléromètre + gyroscope ISM330DHCX | Compatibilité du microphone avec la L476RG **non confirmée** par ST : à vérifier avant de la choisir |
+
+NanoEdge AI marche bien sur des **sons courts et typés** (moins d'une seconde) : une sonnerie, un bip, des
+coups, un bruit de machine. Il est beaucoup moins à l'aise avec la **parole** : les voix varient trop d'une
+personne à l'autre pour un hackathon.
+
+**Le point clé** : on n'envoie pas le son brut à NanoEdge. À 16 kHz, une seconde fait 16 000 valeurs, alors
+que ST conseille des signaux de 16 à 4096 points par axe. Le STM32 calcule d'abord un petit
+**spectrogramme** (l'énergie dans quelques dizaines de bandes de fréquence, tranche de temps par tranche de
+temps), et c'est lui qui part vers NanoEdge, comme les 6 courbes de la baguette.
+
+## 🛟 Assistance à la personne
+
+### 17. Sons de la maison pour une personne malentendante (N-classes)
+- La carte écoute la pièce et signale par une LED (ou une vibration, un message) : `sonnette`, `alarme`
+  (détecteur de fumée, réveil), `frappe` (on frappe à la porte), `applaudissement` (deux claquements de
+  mains pour appeler), plus une classe **`autre`** (voix, musique, pas, vaisselle) à ignorer.
+- Utile, facile à montrer (on sonne, la LED s'allume) et des classes nettement différentes : son tenu,
+  impulsions, bruit large bande.
+- Plan de développement détaillé plus bas (« Plan détaillé : Sons de la maison »).
+
+## 🔧 Maintenance prédictive
+
+### 18. Une machine qui sonne faux (détection d'anomalie, apprentissage sur la carte)
+- Carte posée près d'un ventilateur, d'une pompe d'aquarium ou d'une imprimante : elle **apprend seule le
+  bruit normal**, puis signale un changement (obstacle dans les pales, filtre bouché, roulement usé).
+- Le pendant sonore du ventilateur (10), et le même principe que la variante détection d'anomalie de la
+  Sentinelle : pas de collecte préalable des défauts.
+
+## 🎮 Démo ludique
+
+### 19. Serrure à rythme (N-classes)
+- Reconnaître un rythme de claquements de mains ou de coups sur une porte (« toc… toc-toc ») pour « ouvrir ».
+- Le pendant sonore du toc-toc secret (15) : la carte n'a pas besoin de toucher la porte.
+
+À éviter en hackathon : la reconnaissance de mots (« oui », « non », « allume »), faisable en principe mais
+qui demande énormément de données pour un résultat souvent décevant.
+
+## Plan détaillé : Sons de la maison (17)
+
+La démarche est celle de la baguette : un **déclenchement** sur un événement (ici, un son plus fort que le
+bruit de fond), une **fenêtre** de longueur fixe avec un peu d'avance gardée en mémoire, une classe
+**`autre`** pour le rejet. Ce qui change, c'est le prétraitement : un spectrogramme au lieu de courbes.
+
+### 1. Le matériel
+- NUCLEO-L476RG + **X-NUCLEO-CCA02M2** ; un seul des deux microphones suffit.
+- Partir de l'exemple **Microphones_Streaming** du pack **X-CUBE-MEMSMIC1** pour la NUCLEO-L476RG, qui sait
+  déjà acquérir le son (DFSDM, DMA) : c'est l'équivalent de `ST-exemple/` pour ce projet. L'essayer tel
+  quel d'abord (il envoie le son au PC par USB, à écouter avec Audacity).
+- Pour la collecte, des sons reproductibles : sonnerie et alarme jouées par un téléphone ou une enceinte à
+  volume modéré, vraies frappes et vrais claquements de mains, plusieurs personnes et plusieurs distances.
+
+### 2. Concevoir le signal (le point clé)
+
+| Choix | Valeur proposée | Pourquoi |
+|---|---|---|
+| Échantillonnage | 16 kHz, 16 bits, un microphone | Assez pour sonneries et bips (quelques kHz), et peu de calcul |
+| Tranche de temps | 512 échantillons = 32 ms, FFT de 512 points | Le L476 (Cortex-M4 avec FPU) en fait 32 par seconde sans peine |
+| Bandes | **32 bandes** de fréquence, plus étroites dans les graves (échelle « mel » ou logarithmique), énergie en dB | Résume chaque tranche en 32 nombres, à la manière de l'oreille |
+| Fenêtre | **32 tranches ≈ 1 s** | La durée d'un son court ; une alarme continue remplit simplement la fenêtre |
+| Signal | 32 tranches × 32 bandes = **1024 valeurs**, tranche après tranche | 32 points par axe, une puissance de 2 comme le conseille ST |
+| Déclenchement | énergie d'une tranche > bruit de fond (moyenne glissante) + ~15 dB ; 4 tranches gardées d'avant (~130 ms) | Signaux **alignés sur le début du son**, comme les gestes de la baguette |
+| Mise à l'échelle | dB ramenés entre 0 et 100, le maximum du signal à 100 | Insensible au volume et à la distance : le modèle apprend la **forme** du son |
+
+**Classes** : `sonnette`, `alarme`, `frappe`, `applaudissement`, plus **`autre`**, et un seuil de confiance
+comme `WAND_MIN_CONFIDENCE` dans la baguette.
+
+### 3. Le firmware, sur le modèle de la baguette
+
+Ajouter des fichiers à l'exemple de ST, sans modifier les siens :
+
+| Fichier | Rôle |
+|---|---|
+| `app_config.h` | `APP_MODE` (0 collecte, 1 reconnaissance), fréquence, tailles, seuils |
+| `audio_in.c` | Récupère les échantillons de l'exemple ST (demi-tampons DMA) et les range par tranches de 512 |
+| `spectro.c` | FFT, énergie des 32 bandes, dB : **code portable, testé sur PC** avec des fichiers WAV |
+| `sound_preproc.c` | Bruit de fond, déclenchement, pré-déclenchement, fenêtre de 32 tranches, mise à l'échelle : la logique de `wand_preproc.c` |
+| `sound_ai.c` | Appel NanoEdge (`neai_classification`) : copie de `wand_ai.c` |
+| `app.c` | Mode 0 : une ligne CSV par son détecté, « # En attente… » sinon. Mode 1 : `SON sonnette 92%  (…)`, LED |
+
+### 4. La collecte, avec l'outil commun du dépôt
+
+Un profil suffit, sans nouveau code Python. L'affichage **grille** de l'outil montre le spectrogramme comme
+une image 32 × 32 (une ligne par tranche de temps, une colonne par bande) : on voit d'un coup d'œil le bip
+régulier d'une alarme ou les impulsions d'une frappe.
+
+```json
+{
+  "nom": "Sons de la maison",
+  "classes": ["sonnette", "alarme", "frappe", "applaudissement", "autre"],
+  "longueur": 1024,
+  "affichage": {"type": "grille", "taille": 32, "trames": 1, "min": 10},
+  "valeur_max": 100,
+  "par_passe": 50,
+  "attente": "En attente"
+}
+```
+
+Viser **150 à 300 sons par classe**, en plusieurs séances, avec plusieurs sources (téléphones, enceintes,
+vraies portes), distances et pièces. Garder une passe par classe pour la validation (`--out test`).
+
+### 5. Le Studio
+- Projet **N-Class classification**, cible STM32L476RG, capteur **Generic, 32 axes**, 32 points par axe.
+- Benchmark, matrice de confusion (souvent `frappe` / `applaudissement`), validation sur les fichiers de test.
+- Compiler avec Float ABI **hard** et FPU **fpv4-sp-d16**, puis intégrer `NanoEdgeAI.h` et `libneai.a`.
+
+**Variante 18 (machine qui sonne faux)** : le même spectrogramme, mais calculé en continu (une fenêtre par
+seconde, sans déclenchement), et un projet **Anomaly detection** : la carte apprend le bruit normal au
+démarrage, comme la variante détection d'anomalie de la Sentinelle.
+
+### 6. Planning indicatif pour le hackathon
+1. **Matin** : exemple Microphones_Streaming de ST essayé (son écouté dans Audacity), puis niveau sonore
+   affiché sur l'UART.
+2. Spectrogramme et déclenchement ; collecte qui marche avec l'outil commun.
+3. **Midi** : collecte des 5 classes, benchmark.
+4. **Après-midi** : intégration, reconnaissance en direct, réglage des seuils.
+5. **Bonus** : notification sur le PC ou le téléphone, ou une vibration pour la personne malentendante.
+
+### Pièges à connaître
+- **Conflits avec la librairie NanoEdge** : `libneai.a` contient déjà des fonctions `arm_…` de la CMSIS-DSP
+  (FFT notamment). Ajouter en plus la CMSIS-DSP au projet peut provoquer des symboles en double à l'édition
+  de liens : à vérifier tôt, avec une première librairie NanoEdge quelconque.
+- **Sons trop longs ou trop lents** : une sonnerie à deux tons de plus d'une seconde est coupée. Allonger
+  la fenêtre (64 tranches) si besoin, et revoir `longueur`.
+- **Saturation** : un claquement de mains tout près du micro sature ; garder une distance minimale et
+  vérifier que le spectrogramme ne « plafonne » pas.
+- **Bruits parasites** : ronflement du secteur (50 Hz), ventilateur du PC, écho de la pièce. Les mettre dans
+  `autre`, et collecter dans la pièce de la démonstration.
+- **Vie privée** : rien n'est enregistré ni envoyé, seul un spectrogramme de 1 s est calculé sur la carte,
+  puis oublié. C'est un bon argument à présenter.

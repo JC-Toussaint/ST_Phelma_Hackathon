@@ -18,7 +18,7 @@ pour la Baguette magique.
 Les projets partent des exemples de ST ([`ST-exemple/`](ST-exemple/README.md)) : le projet ToF fourni pour
 le hackathon, et l'application DataLogTerminal de X-CUBE-MEMS1 pour la baguette.
 La fiche [`idees_tof_nanoedge.md`](idees_tof_nanoedge.md) rassemble d'autres idées de projets avec ce
-capteur, et avec les cartes accéléromètre X-NUCLEO-IKS01A2 ou IKS01A3.
+capteur, avec les cartes accéléromètre X-NUCLEO-IKS01A2 ou IKS01A3, et avec un microphone.
 
 ---
 
@@ -65,7 +65,7 @@ ou un **V** tracés dans l'air, à partir de 6 courbes (accélération et rotati
 ├── outils/                     collecte NanoEdge commune (collecte_nanoedge.py + un profil JSON par projet)
 ├── cubeide_cible.py            remet la cible MCU des projets CubeIDE (« Not able to get mcu target »)
 ├── CUBEIDE_IMPORT.md           importer un projet dans CubeIDE sans le casser, et corriger les erreurs
-└── idees_tof_nanoedge.md       idées de projets avec ce capteur, et avec un accéléromètre (IKS01A2 / IKS01A3)
+└── idees_tof_nanoedge.md       idées de projets : capteur ToF, accéléromètre (IKS01A2 / IKS01A3), microphone
 ```
 
 **Base commune** : chaque projet ToF est une **copie du projet fourni par ST**
