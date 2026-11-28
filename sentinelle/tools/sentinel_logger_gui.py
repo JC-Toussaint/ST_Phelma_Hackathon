@@ -17,7 +17,8 @@ Utilisation :
     python sentinel_logger_gui.py            # carte réelle (115200 bauds)
     python sentinel_logger_gui.py --demo     # données simulées, sans carte (CSV dans demo/)
 
-Raccourcis : 1/2 = classe, Espace = démarrer/arrêter, R = mémoriser la référence, E = écarts, D = distances.
+Raccourcis : 1/2 = classe, Espace = démarrer/arrêter, Retour arrière = supprimer le dernier signal,
+R = mémoriser la référence, E = écarts, D = distances.
 Dépendance : pip install pyserial  (tkinter est fourni avec Python sous Windows)
 """
 import os

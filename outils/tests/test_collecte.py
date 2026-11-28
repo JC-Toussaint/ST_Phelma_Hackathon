@@ -151,6 +151,26 @@ files.start_pass("a")
 files.end_pass()
 check(files.undo_info is None, "passe vide : rien à annuler")
 
+print("[suppression du dernier signal]")
+open(files.path("a"), "w").write("7,7\n")
+files.start_pass("a")
+files.add([1, 1])
+files.add([22, 22])
+check(files.remove_last() == ("a", 1), "pendant la passe : dernier signal retiré")
+files.add([333, 333])
+files.add([4, 4])
+check(files.end_pass() == ("a", 3) and open(files.path("a")).read() == "7,7\n1,1\n333,333\n4,4\n",
+      "la passe continue après le retrait, le fichier est juste")
+check(files.remove_last() == ("a", 2) and open(files.path("a")).read() == "7,7\n1,1\n333,333\n",
+      "après la passe : dernier signal retiré")
+check(files.undo() == ("a.csv", 2) and open(files.path("a")).read() == "7,7\n", "annulation de ce qui reste de la passe")
+check(files.remove_last() is None, "rien à retirer après l'annulation")
+files.start_pass("a")
+files.add([5, 5])
+files.end_pass()
+check(files.remove_last() == ("a", 0) and files.remove_last() is None and files.undo_info is None
+      and open(files.path("a")).read() == "7,7\n", "jamais avant le début de la passe")
+
 print("[signaux de démo]")
 for prof in (cc.Profile(GRID), cc.Profile(CURVES), cc.Profile(RAW)):
     sigs = [cc.demo_signal(prof, k, 0.5) for k in range(len(prof.classes))]
@@ -270,8 +290,23 @@ def gui_tests():
         check(n == 3 and app.state == "idle", f"{name} : passe de 3 signaux enregistrée, arrêt automatique")
         check("(2)" in log and "(1)" not in log and "Ligne ignorée" in log,
               f"{name} : message d'attente remplacé, ligne de mauvaise longueur signalée")
+        app.remove_last()
+        check(app.files.count(prof.classes[1]) == 2 and str(app.undo_btn.cget("state")) == "normal",
+              f"{name} : dernier signal retiré après la passe")
         app.undo_last()
-        check(app.files.count(prof.classes[1]) == 0, f"{name} : annulation de la passe")
+        check(app.files.count(prof.classes[1]) == 0 and str(app.del_btn.cget("state")) == "disabled",
+              f"{name} : annulation de la passe")
+        app.begin_record()
+        for _ in range(2):
+            q.put(("line", ",".join(map(str, sig)) + "\n"))
+        while app.files.current[3] < 2:
+            app.update()
+        app.focus_set()
+        app.event_generate("<BackSpace>", when="tail")
+        app.update()
+        check(app.state == "recording" and app.files.current[3] == 1, f"{name} : Retour arrière pendant la passe")
+        app.stop_record()
+        app.undo_last()
         if data is DIST:
             v = app.view
             scene = [100] * 64

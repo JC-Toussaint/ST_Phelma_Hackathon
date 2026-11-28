@@ -12,7 +12,8 @@ Interface graphique (par défaut) :
     python outils/collecte_nanoedge.py --profil ... --demo           # données simulées, sans carte
                                                                      #   (CSV dans le sous-dossier demo/)
   Choix du port, affichage du signal en direct, classes (touches 1..9), passes avec compte à rebours
-  (Espace), progression, nombre de signaux par fichier, annulation de la dernière passe.
+  (Espace), progression, nombre de signaux par fichier, suppression du dernier signal (Retour arrière,
+  pendant ou après une passe), annulation de la dernière passe.
 
 Ligne de commande (sans fenêtre) :
     python outils/collecte_nanoedge.py --profil ... --cli --port COM5         # collecte guidée
@@ -478,6 +479,8 @@ def run_gui(profile, out_dir, demo=False, port=None):
             brow.grid(row=r + 2, column=0, columnspan=2, sticky="we", pady=(8, 4))
             self.rec_btn = ttk.Button(brow, text="●  Enregistrer  (Espace)", style="Rec.TButton", command=self.toggle_record)
             self.rec_btn.pack(side="left", fill="x", expand=True)
+            self.del_btn = ttk.Button(brow, text="Suppr. dernier  (⌫)", command=self.remove_last, state="disabled")
+            self.del_btn.pack(side="left", padx=(8, 0))
             self.undo_btn = ttk.Button(brow, text="Annuler la dernière passe", command=self.undo_last, state="disabled")
             self.undo_btn.pack(side="left", padx=(8, 0))
             self.progress = ttk.Progressbar(rec, maximum=100)
@@ -513,6 +516,7 @@ def run_gui(profile, out_dir, demo=False, port=None):
             for cls in ("TButton", "TCheckbutton", "TRadiobutton"):   # Espace ne « clique » pas un bouton
                 self.bind_class(cls, "<Key-space>", lambda e: None)
             self.bind("<space>", lambda e: None if self._typing() else self.toggle_record())
+            self.bind("<BackSpace>", lambda e: None if self._typing() else self.remove_last())
             for i, c in enumerate(profile.classes[:9]):
                 self.bind(str(i + 1), lambda e, c=c: self.state == "idle" and not self._typing() and self.cls.set(c))
             if profile.display == "grille" and profile.diff_min:
@@ -611,6 +615,7 @@ def run_gui(profile, out_dir, demo=False, port=None):
                                 + (f", {n} zones actives" if n is not None else ""))
             if self.state == "recording":
                 got = self.files.add(values)
+                self.del_btn.configure(state="normal")
                 target = self.get_target()
                 self.progress["value"] = 100 * got / target
                 left = f"   (reste ~{int((target - got) / self.rate)} s)" if self.rate > 0.1 else ""
@@ -647,7 +652,9 @@ def run_gui(profile, out_dir, demo=False, port=None):
             if d and self.state == "idle":
                 self.out_dir.set(d)
                 self.files.undo_info = None
+                self.files.starts = []
                 self.undo_btn.configure(state="disabled")
+                self.del_btn.configure(state="disabled")
                 self.refresh_counts()
 
         def toggle_record(self):
@@ -676,6 +683,7 @@ def run_gui(profile, out_dir, demo=False, port=None):
             self.files.out_dir = self.out_dir.get()
             self.files.start_pass(self.cls.get())
             self.progress["value"] = 0
+            self.del_btn.configure(state="disabled")
             self.state = "recording"
             self.rec_lbl.configure(text=f"{self.cls.get().upper()} : 0/{self.get_target()}", foreground=REC)
 
@@ -705,7 +713,28 @@ def run_gui(profile, out_dir, demo=False, port=None):
                 if res:
                     self.add_log(f"Passe annulée : {res[1]} signaux retirés de {res[0]}", "info")
                 self.undo_btn.configure(state="disabled")
+                self.del_btn.configure(state="disabled")
                 self.refresh_counts()
+
+        def remove_last(self):
+            """Retire le dernier signal enregistré, pendant la passe (elle continue) ou juste après."""
+            if self.state == "countdown":
+                return
+            res = self.files.remove_last()
+            if not res:
+                return
+            cls, left = res
+            self.add_log(f"Dernier signal retiré de {cls}.csv", "info")
+            if self.state == "recording":
+                self.progress["value"] = 100 * left / self.get_target()
+                self.rec_lbl.configure(text=f"{cls.upper()} : {left}/{self.get_target()}  (dernier retiré)")
+            else:
+                self.rec_lbl.configure(text=f"Dernier signal retiré : {left} restant(s) de cette passe dans {cls}.csv",
+                                       foreground=FG)
+                self.undo_btn.configure(state="normal" if left else "disabled")
+                self.refresh_counts()
+            if not left:
+                self.del_btn.configure(state="disabled")
 
         def on_close(self):
             self.disconnect()

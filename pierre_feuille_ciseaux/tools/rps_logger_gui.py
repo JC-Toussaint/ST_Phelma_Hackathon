@@ -10,7 +10,8 @@ Utilisation :
     python rps_logger_gui.py --demo          # données simulées, sans carte
     python rps_logger_gui.py --out essai2    # autre dossier (relatif au dossier de ce script)
 
-Raccourcis : 1/2/3 = choisir la classe, Espace = démarrer/arrêter l'enregistrement.
+Raccourcis : 1/2/3 = choisir la classe, Espace = démarrer/arrêter l'enregistrement,
+Retour arrière = supprimer le dernier signal enregistré.
 Les fichiers pierre.csv, feuille.csv, ciseaux.csv sont écrits dans ce dossier (tools/).
 Dépendance : pip install pyserial  (tkinter est fourni avec Python sous Windows)
 """

@@ -110,6 +110,7 @@ L'interface utilise tkinter, fourni avec Python sous Windows ; seul `pyserial` e
 | **Ligne sous la grille** | « Signal reçu : 512 valeurs, N zones actives », ou « Aucun signal (rien devant le capteur ?) ». |
 | **Enregistrement** (à droite) | Une ligne par classe, avec sa touche (`1` pierre, `2` feuille, `3` ciseaux) et le **nombre de signaux déjà dans son fichier**. *Signaux par passe* (300). *Dossier* : où sont écrits les CSV (`tools/` par défaut, *…* pour en choisir un autre). |
 | **Enregistrer / Arrêter (Espace)** | Lance une passe pour la classe cochée, après un compte à rebours de 3 s affiché sur la grille, ou l'arrête avant la fin. |
+| **Suppr. dernier (⌫)** | Retire le **dernier signal** enregistré (touche Retour arrière), pendant la passe (elle continue) ou juste après ; plusieurs appuis retirent les précédents, sans remonter avant le début de la passe. |
 | **Annuler la dernière passe** | Retire du fichier les signaux de la **dernière** passe, après confirmation. Une seule passe peut être annulée. |
 | **Barre de progression** | Classe en cours, signaux enregistrés sur la cible, durée restante ; un bip à la fin. En dessous, l'astuce du profil. |
 | **Messages de la carte** | Les lignes `#` envoyées par la carte (« mode COLLECTE », « En attente d'une main… », qui se remplace au lieu de s'empiler), et celles de l'outil : connexion, fichiers, erreurs en orange ou rouge. |

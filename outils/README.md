@@ -33,8 +33,9 @@ Options : `--out DOSSIER` (relatif au dossier du profil), `--classes a b` (une p
 autre que celui du profil).
 
 **Interface graphique** : choix du port, signal en direct, une classe par touche (1 à 9), passe avec
-compte à rebours (Espace), progression, nombre de signaux par fichier, **annulation de la dernière
-passe**, avec la durée restante. Elle affiche aussi les messages de la carte ; le message d'attente qui se répète remplace la
+compte à rebours (Espace), progression, nombre de signaux par fichier, **suppression du dernier
+signal** (*Suppr. dernier*, touche Retour arrière : pendant la passe, qui continue, ou juste après, signal par
+signal sans remonter avant le début de la passe), **annulation de la dernière passe**, avec la durée restante. Elle affiche aussi les messages de la carte ; le message d'attente qui se répète remplace la
 ligne précédente au lieu de s'empiler. Les lignes de mauvaise longueur sont signalées : le profil ou le
 mode de la carte est alors incorrect.
 

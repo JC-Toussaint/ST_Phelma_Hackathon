@@ -232,14 +232,16 @@ def parse_line(line, expected_len=0):
 
 
 class ClassFiles:
-    """Un fichier CSV par classe dans un dossier : comptage, ajout par passe, annulation de la dernière passe.
-    L'annulation tronque le fichier à sa taille d'avant la passe : rien d'autre n'est touché."""
+    """Un fichier CSV par classe dans un dossier : comptage, ajout par passe, annulation de la dernière passe,
+    suppression du dernier signal (pendant ou après la passe). L'annulation et la suppression tronquent le
+    fichier à une taille mémorisée (début de la passe ou du signal) : rien d'autre n'est touché."""
 
     def __init__(self, out_dir, classes):
         self.out_dir = out_dir
         self.classes = list(classes)
         self.current = None          # (classe, fichier ouvert, taille avant la passe, nb ajoutés)
         self.undo_info = None        # (chemin, taille avant la passe, nb)
+        self.starts = []             # position de début de chaque signal de la passe en cours ou de la dernière
 
     def path(self, cls):
         return os.path.join(self.out_dir, f"{cls}.csv")
@@ -269,11 +271,16 @@ class ClassFiles:
                         g.write(b"\n")
                     size += 1
         self.current = [cls, open(p, "a", newline="\n", encoding="ascii"), size, 0]
+        self.starts = []
+        self._end = size                             # taille du fichier, suivie à chaque ajout ou retrait
 
     def add(self, values):
         if not self.current:
             raise RuntimeError("aucune passe en cours")
-        self.current[1].write(",".join(str(v) for v in values) + "\n")
+        line = ",".join(str(v) for v in values) + "\n"
+        self.starts.append(self._end)
+        self._end += len(line)                       # ascii, fin de ligne "\n" : 1 caractère = 1 octet
+        self.current[1].write(line)
         self.current[3] += 1
         return self.current[3]
 
@@ -287,6 +294,24 @@ class ClassFiles:
         self.undo_info = (self.path(cls), size, n) if n else None
         return cls, n
 
+    def remove_last(self):
+        """Retire le dernier signal de la passe en cours ou, sinon, de la dernière passe terminée (sans
+        remonter avant son début) ; retourne (classe, nb restant dans la passe) ou None."""
+        if not self.starts or not (self.current or self.undo_info):
+            return None
+        pos = self._end = self.starts.pop()
+        if self.current:
+            f = self.current[1]
+            f.flush()
+            f.truncate(pos)                          # ouvert en ajout : l'écriture suivante repart de la fin
+            self.current[3] -= 1
+            return self.current[0], self.current[3]
+        p, size, n = self.undo_info
+        with open(p, "r+b") as f:
+            f.truncate(pos)
+        self.undo_info = (p, size, n - 1) if n > 1 else None
+        return os.path.splitext(os.path.basename(p))[0], n - 1
+
     def undo(self):
         """Retire la dernière passe terminée ; retourne (nom du fichier, nb retirés) ou None."""
         if not self.undo_info or self.current:
@@ -295,6 +320,7 @@ class ClassFiles:
         with open(p, "r+b") as f:
             f.truncate(size)
         self.undo_info = None
+        self.starts = []
         return os.path.basename(p), n
 
 
