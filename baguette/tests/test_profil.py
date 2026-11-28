@@ -40,6 +40,22 @@ for script in ("wand_logger_gui.py", "wand_logger.py"):
                        capture_output=True, text=True, timeout=30)
     check(r.returncode == 0 and "--demo" in r.stdout, f"{script} --help")
 
+# Les deux projets (X-NUCLEO-IKS01A2 et IKS01A3) partagent l'application : seul imu_sensor.c / .h diffère
+A2, A3 = (os.path.join(ROOT, f"NUCLEO_L476RG_IKS01A{k}_BAGUETTE") for k in (2, 3))
+COMMON = ["Core/Inc/app.h", "Core/Inc/app_config.h", "Core/Inc/uart_io.h", "Core/Inc/wand_ai.h",
+          "Core/Inc/wand_preproc.h", "Core/Inc/NanoEdgeAI.h", "Core/Src/app.c", "Core/Src/uart_io.c",
+          "Core/Src/wand_ai.c", "Core/Src/wand_preproc.c", "Core/Src/libneai.a"]
+if os.path.isdir(A3):
+    diff = [f for f in COMMON if open(os.path.join(A2, f), "rb").read() != open(os.path.join(A3, f), "rb").read()]
+    check(not diff, "IKS01A2 / IKS01A3 : fichiers communs identiques" + (f" (différents : {diff})" if diff else ""))
+    for k, chip in ((2, "LSM6DSL"), (3, "LSM6DSO")):
+        src = open(os.path.join(ROOT, f"NUCLEO_L476RG_IKS01A{k}_BAGUETTE", "Core", "Src", "imu_sensor.c"), encoding="utf8").read()
+        hdr = open(os.path.join(ROOT, f"NUCLEO_L476RG_IKS01A{k}_BAGUETTE", "Core", "Inc", "imu_sensor.h"), encoding="utf8").read()
+        check(f"IKS01A{k}_{chip}_0" in src and f'"{chip}"' in hdr and f"IKS01A{5 - k}" not in src,
+              f"IKS01A{k} : imu_sensor utilise le {chip} de sa carte")
+        mems = open(os.path.join(ROOT, f"NUCLEO_L476RG_IKS01A{k}_BAGUETTE", "MEMS", "App", "app_mems.c"), encoding="utf8").read()
+        check("app_init();" in mems and "app_loop();" in mems, f"IKS01A{k} : app_mems.c appelle app_init() / app_loop()")
+
 # Augmentation de données (tools/augmenter.py) sur des gestes de démo
 import importlib.util  # noqa: E402
 import math  # noqa: E402

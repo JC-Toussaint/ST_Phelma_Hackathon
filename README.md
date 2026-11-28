@@ -6,7 +6,8 @@ se calcule dans le microcontrôleur.
 
 **Matériel** : carte **NUCLEO-L476RG** (STM32L476, Cortex-M4 80 MHz) + une carte d'extension :
 **X-NUCLEO-53L5A1** (capteur ToF **VL53L5CX**, 64 zones, 15 mesures/s) pour Pierre-Feuille-Ciseaux et la
-Sentinelle, **X-NUCLEO-IKS01A2** (accéléromètre + gyroscope **LSM6DSL**) pour la Baguette magique.
+Sentinelle, **X-NUCLEO-IKS01A2** (accéléromètre + gyroscope **LSM6DSL**) ou **X-NUCLEO-IKS01A3** (**LSM6DSO**)
+pour la Baguette magique.
 
 | Projet | Idée | IA NanoEdge | Outils PC |
 |---|---|---|---|
@@ -56,7 +57,7 @@ ou un **V** tracés dans l'air, à partir de 6 courbes (accélération et rotati
 ├── ST-exemple/                 projets de référence (zip : capteur ToF, IKS01A2, IKS01A3) et README de ST
 ├── pierre_feuille_ciseaux/     ┐  un dossier par projet, chacun avec :
 ├── sentinelle/                 │    NUCLEO_L476RG_TOF_<NOM>/  projet STM32CubeIDE complet
-├── baguette/                   ┘      (NUCLEO_L476RG_IKS01A2_BAGUETTE/ pour la baguette)
+├── baguette/                   ┘      (NUCLEO_L476RG_IKS01A2_BAGUETTE/ et _IKS01A3_BAGUETTE/ pour la baguette)
 │                                    tools/                    outils PC en Python (tkinter)
 │                                    tests/                    tests sur PC (make test)
 │                                    README.md                 guide complet du projet
@@ -69,7 +70,7 @@ ou un **V** tracés dans l'air, à partir de 6 courbes (accélération et rotati
 
 **Base commune** : chaque projet ToF est une **copie du projet fourni par ST**
 `NUCLEO_L476RG_TOF_VL53L5A1`, renommée pour que les projets puissent cohabiter dans le même workspace (la
-baguette part de même de `NUCLEO_L476RG_IKS01A2.zip` : voir son `DIFFERENCES_ST.md`).
+baguette part de même de `NUCLEO_L476RG_IKS01A2.zip` et `NUCLEO_L476RG_IKS01A3.zip` : voir son `DIFFERENCES_ST.md`).
 - **Aucun fichier `Src/` ou `Inc/` de ST n'est modifié** : l'application est ajoutée dans de nouveaux
   fichiers.
 - **Seul `X-CUBE-TOF1/App/app_x-cube-tof1.c` change vraiment** : il appelle `app_init()` et `app_loop()` à
@@ -84,8 +85,8 @@ Le projet ST d'origine est fourni **zippé** dans `ST-exemple/NUCLEO_L476RG_TOF_
 `app_x-cube-tof1.c` (avec `NEAI_MODE 1`), alors que le README les montre avec `NEAI_MODE 0`.
 
 Pour un projet avec un accéléromètre, `ST-exemple/` contient aussi l'application **DataLogTerminal** du pack
-X-CUBE-MEMS1, générée pour la NUCLEO-L476RG : `NUCLEO_L476RG_IKS01A2.zip` (X-NUCLEO-IKS01A2, pack 9.6.0,
-base de la baguette) et `NUCLEO_L476RG_IKS01A3.zip` (X-NUCLEO-IKS01A3, pack 11.2.0). Voir
+X-CUBE-MEMS1, générée pour la NUCLEO-L476RG : `NUCLEO_L476RG_IKS01A2.zip` (X-NUCLEO-IKS01A2, pack 9.6.0)
+et `NUCLEO_L476RG_IKS01A3.zip` (X-NUCLEO-IKS01A3, pack 11.2.0), bases des deux projets de la baguette. Voir
 `idees_tof_nanoedge.md`.
 
 ## Démarrage rapide
@@ -100,7 +101,7 @@ base de la baguette) et `NUCLEO_L476RG_IKS01A3.zip` (X-NUCLEO-IKS01A3, pack 11.2
    Les deux logiciels de ST se téléchargent sur st.com, en général avec un compte myST gratuit : le créer
    à l'avance. Lancer NanoEdge AI Studio une fois après l'installation, pour vérifier qu'il démarre.
    Cloner ensuite ce dépôt **sur le disque Windows** (par exemple dans `Documents`).
-1. **Matériel** : enficher la carte d'extension du projet (X-NUCLEO-53L5A1, ou X-NUCLEO-IKS01A2 pour la
+1. **Matériel** : enficher la carte d'extension du projet (X-NUCLEO-53L5A1, ou X-NUCLEO-IKS01A2 / IKS01A3 pour la
    baguette) sur la NUCLEO-L476RG, puis brancher le câble USB (ST-LINK).
    ⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
    sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.

@@ -6,6 +6,9 @@
 
 #include "wand_preproc.h"
 
+#define IMU_NAME   "LSM6DSL"            /* pour les messages de app.c */
+#define IMU_BOARD  "X-NUCLEO-IKS01A2"
+
 /* Initialise l'accéléromètre et le gyroscope à IMU_ODR_HZ, IMU_ACC_FS_G, IMU_GYRO_FS_DPS.
  * Retourne 0 si OK, sinon un code d'erreur négatif (étape qui a échoué). */
 int imu_init(void);

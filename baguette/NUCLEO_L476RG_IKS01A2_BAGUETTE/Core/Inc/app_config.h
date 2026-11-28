@@ -1,7 +1,8 @@
 /**
  * app_config.h - Baguette magique : paramètres de l'application
  *
- * NUCLEO-L476RG + X-NUCLEO-IKS01A2 (LSM6DSL : accéléromètre + gyroscope 6 axes).
+ * NUCLEO-L476RG + X-NUCLEO-IKS01A2 (LSM6DSL) ou X-NUCLEO-IKS01A3 (LSM6DSO) : accéléromètre + gyroscope
+ * 6 axes. Ce fichier est le même dans les deux projets : seul imu_sensor.c / .h dépend de la carte.
  * Un geste dans l'air (cercle, zigzag, frappe, V…) = un signal de WAND_SAMPLES
  * échantillons x 6 axes, classé par une librairie NanoEdge AI (N-class classification).
  */
@@ -22,11 +23,11 @@
 #define APP_UART_BAUD      115200
 
 /* ------------------------------------------------------------------------- */
-/* Capteur LSM6DSL                                                           */
+/* Capteur (LSM6DSL ou LSM6DSO : mêmes réglages)                             */
 /* ------------------------------------------------------------------------- */
 #define IMU_ODR_HZ         104     /* cadence fixe, imposée par le capteur (NanoEdge en a besoin)  */
 #define IMU_ACC_FS_G       16      /* pleine échelle accéléromètre : 2, 4, 8 ou 16 g (les frappes dépassent 8 g) */
-#define IMU_GYRO_FS_DPS    2000    /* pleine échelle gyroscope : 125, 245, 500, 1000 ou 2000 °/s (frappes > 1000) */
+#define IMU_GYRO_FS_DPS    2000    /* pleine échelle gyroscope : de 125 à 2000 °/s (frappes > 1000) */
 
 /* ------------------------------------------------------------------------- */
 /* Signal (doit correspondre au projet NanoEdge AI Studio et au profil de collecte)  */

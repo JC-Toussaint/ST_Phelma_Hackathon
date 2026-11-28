@@ -1,7 +1,7 @@
 # Baguette magique : reconnaître des gestes dans l'air
 
-NUCLEO-L476RG + **X-NUCLEO-IKS01A2** (accéléromètre + gyroscope LSM6DSL) + **NanoEdge AI** (classification
-N-classes).
+NUCLEO-L476RG + **X-NUCLEO-IKS01A2** (accéléromètre + gyroscope LSM6DSL) ou **X-NUCLEO-IKS01A3** (LSM6DSO)
++ **NanoEdge AI** (classification N-classes). Un projet CubeIDE par carte, avec la même application.
 
 Tu tiens la carte comme une baguette et tu fais un geste dans l'air : **cercle**, **zigzag** (la lettre Z),
 **frappe** ou **V**. Le STM32 reconnaît le geste à partir de 6 courbes (accélération et vitesse angulaire sur 3 axes),
@@ -18,6 +18,8 @@ GESTE - (autre mouvement)   (zigzag 8% v 6% frappe 4% cercle 12% autre 70%)
 > entraînée avec **seulement 10 gestes par classe, faits par une seule personne**, vifs (~0,5 s) : elle
 > reconnaît ces gestes-là, mais pas forcément les vôtres. **Le travail du hackathon** : collecter vos propres
 > gestes, plus nombreux et plus variés, et générer une librairie qui reconnaît les 5 classes pour tout le monde.
+> Cette librairie a été apprise avec une **X-NUCLEO-IKS01A2** : avec une IKS01A3, elle peut moins bien marcher
+> (voir section 8).
 
 Ce qui le rend intéressant :
 - **Des signaux temporels**, le point fort de NanoEdge : une trajectoire dans le temps, pas une image.
@@ -27,10 +29,11 @@ Ce qui le rend intéressant :
 
 ```
 baguette/
-├── NUCLEO_L476RG_IKS01A2_BAGUETTE/   projet STM32CubeIDE = projet DataLogTerminal de ST (X-CUBE-MEMS1 9.6.0)
+├── NUCLEO_L476RG_IKS01A2_BAGUETTE/   projet STM32CubeIDE pour la X-NUCLEO-IKS01A2 = DataLogTerminal de ST (X-CUBE-MEMS1 9.6.0)
 │   ├── Core/Inc, Core/Src            + app, imu_sensor, wand_preproc, wand_ai, uart_io, app_config.h
 │   │                                   + librairie NanoEdge fournie (NanoEdgeAI.h, libneai.a)
 │   └── MEMS/App/app_mems.c           modifié (zones USER CODE) : appelle app_init() / app_loop()
+├── NUCLEO_L476RG_IKS01A3_BAGUETTE/   le même pour la X-NUCLEO-IKS01A3 (X-CUBE-MEMS1 11.2.0) : seul imu_sensor.c diffère
 ├── DEMARRAGE.md                       la liste des opérations, dans l'ordre, du PC vide aux premiers gestes
 ├── DIFFERENCES_ST.md                 liste détaillée des différences avec le projet de ST
 ├── baguette.pptx                     présentation du projet (diapositives tirées de ce README)
@@ -48,7 +51,7 @@ baguette/
 
 - ⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
   sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
-- Enficher la X-NUCLEO-IKS01A2 sur la NUCLEO-L476RG (connecteurs Arduino), puis brancher le câble USB
+- Enficher la X-NUCLEO-IKS01A2 (ou IKS01A3) sur la NUCLEO-L476RG (connecteurs Arduino), puis brancher le câble USB
   (ST-LINK). Un câble long laisse plus de liberté pour les gestes.
 - **Marquer un repère « haut / avant »** sur la carte et la tenir **toujours dans le même sens** : les axes
   du capteur tournent avec elle, et un geste fait la baguette retournée ressemble à un autre geste.
@@ -60,23 +63,34 @@ baguette/
 >   ou part au bout du câble ;
 > - **ne pas faire tournoyer la carte par le câble** et ne pas tirer dessus : le connecteur USB de la
 >   NUCLEO s'arrache facilement ;
-> - vérifier de temps en temps que la X-NUCLEO-IKS01A2 est **bien enfoncée** : les secousses peuvent la
->   faire sortir de ses connecteurs (la carte affiche alors `ERREUR : init LSM6DSL`).
+> - vérifier de temps en temps que la carte d'extension est **bien enfoncée** : les secousses peuvent la
+>   faire sortir de ses connecteurs (la carte affiche alors `ERREUR : init LSM6DSL`, ou `LSM6DSO`).
 
 ## 2. Projet STM32CubeIDE
 
-Le projet est celui que génère STM32CubeIDE pour la NUCLEO-L476RG avec X-CUBE-MEMS1 9.6.0 et l'application
-IKS01A2_DataLogTerminal, auquel l'application a été ajoutée (voir `DIFFERENCES_ST.md`). Il n'y a rien à
-configurer.
+**Un projet par carte d'extension**, à choisir selon celle que vous avez (inscrite sur la carte) :
+
+| Carte | Capteur | Projet | Base de ST |
+|---|---|---|---|
+| X-NUCLEO-**IKS01A2** | LSM6DSL | `NUCLEO_L476RG_IKS01A2_BAGUETTE/` | DataLogTerminal, X-CUBE-MEMS1 9.6.0 |
+| X-NUCLEO-**IKS01A3** | LSM6DSO | `NUCLEO_L476RG_IKS01A3_BAGUETTE/` | DataLogTerminal, X-CUBE-MEMS1 11.2.0 |
+
+Chaque projet est celui que génère STM32CubeIDE pour la NUCLEO-L476RG avec l'application DataLogTerminal de
+sa carte, auquel l'application a été ajoutée (voir `DIFFERENCES_ST.md`). L'application est **la même**
+dans les deux : seul `Core/Src/imu_sensor.c` (et le nom du capteur dans `imu_sensor.h`) change. Signal,
+réglages, outils de collecte et format des CSV sont identiques. Il n'y a rien à configurer.
 
 1. *File > Import > General > Existing Projects into Workspace* → sélectionner
-   `NUCLEO_L476RG_IKS01A2_BAGUETTE/` (voir [`CUBEIDE_IMPORT.md`](../CUBEIDE_IMPORT.md)).
+   `NUCLEO_L476RG_IKS01A2_BAGUETTE/` ou `NUCLEO_L476RG_IKS01A3_BAGUETTE/`, selon la carte (voir
+   [`CUBEIDE_IMPORT.md`](../CUBEIDE_IMPORT.md)).
 2. Choisir le mode avec `APP_MODE` dans `Core/Inc/app_config.h` : `0` = collecte (valeur par défaut),
    `1` = reconnaissance, avec la librairie fournie ou la vôtre (section 5).
 3. Compiler, puis flasher via le ST-LINK.
 
 Au démarrage, le terminal (115200 bauds) affiche « # Baguette magique : mode COLLECTE ». Si la carte
-d'extension n'est pas reconnue : `# ERREUR : init LSM6DSL (carte X-NUCLEO-IKS01A2 bien enfichee ?)`.
+d'extension n'est pas reconnue : `# ERREUR : init LSM6DSL (carte X-NUCLEO-IKS01A2 bien enfichee ?)`
+(`LSM6DSO` et `X-NUCLEO-IKS01A3` avec l'autre projet). Ce message apparaît aussi si le projet ne correspond
+pas à la carte enfichée.
 
 ## 3. Collecte des données (APP_MODE = 0)
 
@@ -245,7 +259,8 @@ Studio, pas d'obtenir un vrai modèle.
 
 ## 5. Intégrer la librairie et reconnaître les gestes (APP_MODE = 1)
 
-1. Depuis le `.zip`, copier dans `NUCLEO_L476RG_IKS01A2_BAGUETTE/` :
+1. Depuis le `.zip`, copier dans le projet de votre carte (`NUCLEO_L476RG_IKS01A2_BAGUETTE/` ou
+   `NUCLEO_L476RG_IKS01A3_BAGUETTE/`) :
    - `NanoEdgeAI.h` → `Core/Inc/` ;
    - `libneai.a` → `Core/Src/`,
 
@@ -315,5 +330,7 @@ make synth    # CSV synthétiques des 5 classes pour essayer NanoEdge AI Studio
 - **Orientation** : la baguette doit être tenue toujours dans le même sens (repère « haut / avant »).
 - **Câble USB** : il limite l'amplitude des gestes ; une version sans fil demanderait une batterie et une
   liaison radio.
-- **Carte X-NUCLEO-IKS01A3** : même démarche avec le LSM6DSO (pack X-CUBE-MEMS1 11.2.0, fonctions
-  `IKS01A3_…`), voir `idees_tof_nanoedge.md`. Ce projet ne la prend pas en charge tel quel.
+- **Carte X-NUCLEO-IKS01A3** : projet `NUCLEO_L476RG_IKS01A3_BAGUETTE/`, compilé (modes collecte et
+  reconnaissance) mais **pas encore essayé sur la carte**. La librairie fournie y est la même, apprise avec
+  le LSM6DSL de l'IKS01A2 : les axes du LSM6DSO peuvent être orientés autrement sur la carte. Avec une
+  IKS01A3, collecter vos propres gestes et générer votre librairie avant de juger la reconnaissance.

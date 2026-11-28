@@ -35,7 +35,9 @@ Il faut prévoir à peu près :
 
 - ⚠️ **Sortir les cartes de leur blister avec précaution** : les broches des connecteurs, sous les cartes,
   sont pointues et peuvent piquer les doigts. Tenir les cartes par les bords.
-- Enficher la X-NUCLEO-IKS01A2 sur la NUCLEO-L476RG, puis brancher le câble USB (ST-LINK).
+- Regarder le nom inscrit sur la carte d'extension : **X-NUCLEO-IKS01A2** ou **X-NUCLEO-IKS01A3**. Chacune a son
+  projet CubeIDE (étape 2).
+- Enficher la carte d'extension sur la NUCLEO-L476RG, puis brancher le câble USB (ST-LINK).
 - **Marquer un repère « haut / avant »** sur la carte et la tenir **toujours de la même façon**.
 - ⚠️ **Tous les gestes se font dans l'air** : ne jamais taper la carte sur la table ou un objet, la tenir
   fermement par les bords, ne pas la faire tournoyer par le câble.
@@ -43,14 +45,15 @@ Il faut prévoir à peu près :
 ## 2. Essayer tout de suite la librairie fournie (README, sections 2 et 5)
 
 1. Dans CubeIDE : *File > Import > General > **Existing Projects into Workspace***, puis choisir le
-   dossier `baguette/NUCLEO_L476RG_IKS01A2_BAGUETTE/`. **Ne pas** cocher « Copy projects into workspace ».
+   dossier `baguette/NUCLEO_L476RG_IKS01A2_BAGUETTE/` (carte IKS01A2) ou
+   `baguette/NUCLEO_L476RG_IKS01A3_BAGUETTE/` (carte IKS01A3). **Ne pas** cocher « Copy projects into workspace ».
 2. Vérifier qu'en haut, la configuration est **Debug**, et non « Default ».
 3. Passer `APP_MODE` à **1** dans `Core/Inc/app_config.h`, compiler, puis flasher.
 4. Ouvrir le terminal série à **115200 bauds**. Le menu affiche les 5 classes de la librairie.
 5. Immobiliser la baguette (**LED allumée = prête**), puis faire un **cercle vif** (~0,5 s) dans le sens des
    aiguilles d'une montre, en partant du haut. Une ligne `GESTE cercle …` doit s'afficher.
 
-Cette librairie n'a appris que 10 gestes par classe, d'une seule personne : il est normal qu'elle reconnaisse
+Cette librairie a été apprise avec une X-NUCLEO-IKS01A2. Elle n'a appris que 10 gestes par classe, d'une seule personne : il est normal qu'elle reconnaisse
 mal certains de vos gestes. C'est tout l'objet des étapes suivantes.
 
 ## 3. Firmware de collecte (README, section 2)
@@ -98,7 +101,7 @@ variantes dans `tools/augmente/` (README, « Augmenter les données »), sans re
 
 ## 6. Intégrer votre librairie (README, section 5)
 
-1. Copier depuis le `.zip` dans `NUCLEO_L476RG_IKS01A2_BAGUETTE/` : `NanoEdgeAI.h` dans `Core/Inc/` et
+1. Copier depuis le `.zip` dans le projet de votre carte : `NanoEdgeAI.h` dans `Core/Inc/` et
    `libneai.a` dans `Core/Src/`, à la place de la librairie fournie.
 2. Passer `APP_MODE` à **1**, faire *Project > Clean*, recompiler, puis flasher.
 3. Fermer l'outil de collecte, ouvrir le terminal série à **115200 bauds**, et faire des gestes.
@@ -111,7 +114,7 @@ variantes dans `tools/augmente/` (README, « Augmenter les données »), sans re
 |---|---|
 | L'outil de collecte ne peut pas ouvrir le port COM | Le terminal série ou la console de CubeIDE le garde : les fermer. Un seul programme à la fois sur le port |
 | CubeIDE affiche « Default », « make not found » ou « Not able to get mcu target » | Le projet a été mal importé : suivre [`CUBEIDE_IMPORT.md`](../CUBEIDE_IMPORT.md) |
-| `ERREUR : init LSM6DSL` au démarrage | La X-NUCLEO-IKS01A2 est mal enfoncée (les secousses la font sortir) : la renfoncer |
+| `ERREUR : init LSM6DSL` (ou `LSM6DSO`) au démarrage | La carte d'extension est mal enfoncée (les secousses la font sortir) : la renfoncer. Ou le projet ne correspond pas à la carte : IKS01A2 et IKS01A3 ont chacune le leur |
 | Rien ne s'affiche quand on fait un geste | Immobiliser la baguette un instant avant le geste (en reconnaissance : attendre que la LED s'allume), puis faire un geste plus franc |
 | `GESTE ? pas reconnu (…)` ou mauvais geste reconnu | Le geste ne ressemble pas assez aux exemples appris : collecter des gestes comme ceux-là (vitesse, taille, tenue), puis régénérer la librairie |
 | Benchmark parfait, reconnaissance médiocre sur la carte | Une seule séance de collecte, ou des gestes coupés ou saturés : voir le « Piège » du README, section 4 |

@@ -1,4 +1,7 @@
-# Différences avec le projet de base de ST
+# Différences avec les projets de base de ST
+
+Deux projets, un par carte d'extension, construits de la même façon : `NUCLEO_L476RG_IKS01A2_BAGUETTE/` (sections 1 à 4)
+et `NUCLEO_L476RG_IKS01A3_BAGUETTE/` (section 5).
 
 Le projet `NUCLEO_L476RG_IKS01A2_BAGUETTE/` part du projet **NUCLEO-L476RG + X-NUCLEO-IKS01A2** généré par
 STM32CubeIDE avec le pack **X-CUBE-MEMS1 9.6.0** et l'application **IKS01A2_DataLogTerminal** de ST. C'est le
@@ -40,3 +43,23 @@ C'est possible, avec les précautions suivantes :
 - les fichiers ajoutés dans `Core/` et les zones `USER CODE` de `app_mems.c` sont conservés ;
 - après la génération, relancer `python3 cubeide_cible.py --check` à la racine du dépôt, et vérifier que
   `-lneai` et `../Core/Src` sont toujours dans *Project > Properties > C/C++ Build > Settings > MCU GCC Linker*.
+
+## 5. Projet `NUCLEO_L476RG_IKS01A3_BAGUETTE/` (X-NUCLEO-IKS01A3)
+
+Il part du projet **NUCLEO-L476RG + X-NUCLEO-IKS01A3** généré par STM32CubeIDE avec le pack
+**X-CUBE-MEMS1 11.2.0** et l'application **IKS01A3_DataLogTerminal** : c'est le projet zippé dans
+`ST-exemple/NUCLEO_L476RG_IKS01A3.zip`. Les changements sont **exactement ceux des sections 1 à 3** :
+
+- **Renommage** : `.project`, `NUCLEO_L476RG_IKS01A3_BAGUETTE.ioc` (`ProjectName`, `ProjectFileName`),
+  `.cproject` (dossiers de compilation, script de liaison en `${ProjDirPath}/STM32L476RGTX_FLASH.ld`) ;
+- **`MEMS/App/app_mems.c`** : les mêmes appels `app_init()` / `app_loop()` dans les zones `USER CODE` ;
+- **`.cproject`** : `-lneai` cherchée dans `../Core/Src` (Debug et Release) ;
+- **fichiers ajoutés** : les mêmes que pour l'IKS01A2, **identiques octet pour octet** (vérifié par
+  `make test`), sauf `Core/Inc/imu_sensor.h` et `Core/Src/imu_sensor.c`, qui pilotent le **LSM6DSO**
+  (`IKS01A3_LSM6DSO_0`, fonctions `IKS01A3_MOTION_SENSOR_…`, mêmes réglages : 104 Hz, ±16 g, ±2000 °/s).
+
+Aucun autre fichier de ST n'est modifié. Pour régénérer le code depuis le `.ioc`, mêmes précautions qu'en
+section 4, avec le pack **X-CUBE-MEMS1 11.2.0** (les versions 12.0.0 et suivantes n'ont plus l'IKS01A3).
+
+La librairie NanoEdge fournie est la même que pour l'IKS01A2 (apprise avec le LSM6DSL) : à remplacer par une
+librairie apprise avec l'IKS01A3.

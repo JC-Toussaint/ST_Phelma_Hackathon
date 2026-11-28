@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include "app_config.h"
 
-/* Un échantillon du LSM6DSL : accélération en mg, vitesse angulaire en mdps (unités du BSP de ST). */
+/* Un échantillon du capteur (LSM6DSL ou LSM6DSO) : accélération en mg, vitesse angulaire en mdps (unités du BSP de ST). */
 typedef struct {
     int32_t ax, ay, az;
     int32_t gx, gy, gz;

@@ -52,7 +52,7 @@ static void common_init(const char *mode)
     uart_puts("\r\n");
     int err = imu_init();
     if (err) {
-        fatal("init LSM6DSL (carte X-NUCLEO-IKS01A2 bien enfichee ?)", err);
+        fatal("init " IMU_NAME " (carte " IMU_BOARD " bien enfichee ?)", err);
     }
     wand_pre_init(&pre);
 }
@@ -63,7 +63,7 @@ static int next_gesture(void)
     int r = imu_read(&sample);
     if (r < 0) {
         if (++read_errors == 100u) {
-            uart_puts("# ERREUR : lectures du LSM6DSL en echec (bus I2C ?)\r\n");
+            uart_puts("# ERREUR : lectures du " IMU_NAME " en echec (bus I2C ?)\r\n");
         }
         return 0;
     }
