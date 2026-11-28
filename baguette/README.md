@@ -33,6 +33,7 @@ baguette/
 │   └── MEMS/App/app_mems.c           modifié (zones USER CODE) : appelle app_init() / app_loop()
 ├── DEMARRAGE.md                       la liste des opérations, dans l'ordre, du PC vide aux premiers gestes
 ├── DIFFERENCES_ST.md                 liste détaillée des différences avec le projet de ST
+├── baguette.pptx                     présentation du projet (diapositives tirées de ce README)
 ├── tools/wand_logger_gui.py          collecte en interface graphique (outil commun outils/)
 ├── tools/wand_logger.py              la même chose en ligne de commande
 ├── tools/profil_collecte.json        profil de collecte : classes, 6 courbes de 256 points
