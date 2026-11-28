@@ -33,6 +33,8 @@ table/
 │   └── MEMS/App/app_mems.c         modifié (zones USER CODE) : appelle app_init() / app_loop()
 ├── DEMARRAGE.md                    la liste des opérations, dans l'ordre
 ├── DIFFERENCES_ST.md               différences avec le projet de ST
+├── table.pptx                      présentation du projet (diapositives tirées de ce README)
+├── img/collecte_gui.png            capture de l'interface de collecte
 ├── tools/table_logger_gui.py       collecte en interface graphique (outil commun outils/)
 ├── tools/table_logger.py           la même chose en ligne de commande
 ├── tools/profil_collecte.json      profil de collecte : zone1…zone4, autre ; 3 courbes de 256 points
@@ -84,6 +86,10 @@ python tools/table_logger.py --port COM5          # en ligne de commande
   change d'état (la ligne est partie) et que la table soit au calme (0,2 s).
 - **L'interface** affiche les 3 courbes de chaque tape : un choc net juste après le début (les 32 premiers
   échantillons sont ceux d'avant la tape), puis une oscillation qui s'amortit.
+
+  ![Interface de collecte en mode --demo](img/collecte_gui.png)
+
+  *Capture en mode `--demo` (courbes simulées, pas de vraies tapes).*
 - **Commencer par 2 zones éloignées** (`zone1`, `zone2`) et lancer un premier benchmark : si le Studio les
   sépare, ajouter les autres.
 - **`autre`** : tout ce qui ne doit pas jouer de note : poser une tasse, un livre, un coude, taper hors des
